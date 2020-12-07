@@ -1,0 +1,199 @@
+---
+#
+# A custom card for UltraSync Alarm
+#
+# This card requires that you've pre-installed the resources:
+#  - layout-card: https://github.com/thomasloven/lovelace-layout-card
+#  - button-card: https://github.com/custom-cards/button-card
+#
+type: custom:layout-card
+# Define a 4x2 grid
+layout: grid
+gridrows: auto auto
+gridcols: auto auto auto auto
+cards:
+  - type: custom:button-card
+    name: 'Home Alarm'
+    show_state: true
+    color_type: icon
+    # | x | x | x |   |
+    # | x | x | x |   |
+    gridcol: 1 / span 3
+    gridrow: 1 / span 2
+    style: |
+      ha-card {
+        box-shadow: none;
+      }
+
+    entity: sensor.ultrasync_area1state
+    tap_action:
+      action: >
+        [[[
+          if (entity.state.startsWith("Armed") || entity.state.includes("Delay"))
+              return "call-service";
+          else
+              return "none";
+        ]]]
+
+      service: ultrasync.disarm
+
+    icon: >
+      [[[
+        if (entity.state.includes("Ready"))
+            return "mdi:shield-home-outline";
+        else if (entity.state.startsWith("Armed"))
+            return "mdi:shield-lock";
+        else if (entity.state.includes("Delay"))
+            return "mdi:shield-home";
+        else if (entity.state.includes("Fire"))
+            return "mdi:fire-alert";
+        else if (entity.state.includes("Medical"))
+            return "mdi:ambulance";
+        else if (entity.state.includes("Alarm"))
+            return "mdi:shield-alert";
+        else if (entity.state.includes("Low Battery"))
+            return "mdi:battery-low";
+        else if (entity.state.includes("Sensor"))
+            return "mdi:alert-circle";
+        else // Unknown
+            return "mdi:lock-question";
+      ]]]
+
+    styles:
+      state:
+        - font-weight: bold
+        - font-size: 1.2em
+
+      icon:
+        - color: >
+            [[[
+              if (entity.state == "Ready")
+                  return "#00a30e"; // Green
+              else if (entity.state.startsWith("Not Ready"))
+                  return "#c7a600"; // Orange
+              else if (entity.state.startsWith("Armed"))
+                  return "#9e0000"; // Red
+              else if (entity.state.includes("Delay"))
+                  return "#c7a600"; // Orange
+              else if (entity.state.includes("Alarm"))
+                  return "#9e0000"; // Red
+              else if (entity.state.includes("Sensor"))
+                  return "#c7a600"; // Orange
+              else
+                  return "#005f9e"; // Blue
+            ]]]
+
+      card:
+        - animation: >
+            [[[
+              if (entity.state.includes("Delay") || entity.state.includes("Alarm"))
+                  return "blink 2s ease infinite";
+              else
+                  return undefined;
+            ]]]
+
+  - type: custom:button-card
+    name: 'Stay'
+    tooltip: 'Set Alarm in Stay/Night mode.'
+    color_type: icon
+    # |   |   |   | x |
+    # |   |   |   |   |
+    gridcol: 4
+    gridrow: 1
+    style: |
+      ha-card {
+        box-shadow: none;
+        height: 100%;
+      }
+
+    entity: sensor.ultrasync_area1state
+    tap_action:
+      action: >
+        [[[
+          if (entity.state == "Ready")
+              return "call-service";
+          else
+              return "none";
+        ]]]
+
+      service: ultrasync.stay
+    icon: >
+      [[[
+        if (entity.state.includes("Armed Stay"))
+            return "mdi:shield-check";
+        else if (entity.state.includes("Delay"))
+            return "mdi:shield-lock";
+        else
+            return "mdi:shield-half-full";
+      ]]]
+
+    styles:
+      icon:
+        - color: >
+            [[[
+              if (entity.state == "Ready")
+                  return "#005f9e"; // Blue
+              else
+                  return undefined;
+            ]]]
+
+        - filter: >
+            [[[
+              if (entity.state != "Ready")
+                  return "grayscale(100%)";
+              else
+                  return "grayscale(0)";
+            ]]]
+
+  - type: custom:button-card
+    name: 'Away'
+    tooltip: 'Set Alarm in Away mode.'
+    color_type: icon
+    # |   |   |   |   |
+    # |   |   |   | x |
+    gridcol: 4
+    gridrow: 2
+    style: |
+      ha-card {
+        box-shadow: none;
+        height: 100%;
+      }
+
+    entity: sensor.ultrasync_area1state
+    tap_action:
+      action: >
+        [[[
+          if (entity.state == "Ready")
+              return "call-service";
+          else
+              return "none";
+        ]]]
+
+      service: ultrasync.away
+    icon: >
+      [[[
+        if (entity.state.includes("Armed Away"))
+            return "mdi:shield-check";
+        else if (entity.state.includes("Delay"))
+            return "mdi:shield-lock";
+        else
+            return "mdi:shield";
+      ]]]
+
+    styles:
+      icon:
+        - color: >
+            [[[
+              if (entity.state == "Ready")
+                  return "#005f9e"; // Blue
+              else
+                  return undefined;
+            ]]]
+
+        - filter: >
+            [[[
+              if (entity.state != "Ready")
+                  return "grayscale(100%)";
+              else
+                  return "grayscale(0)";
+            ]]]

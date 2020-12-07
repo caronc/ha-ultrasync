@@ -1,0 +1,8 @@
+{
+    "name": "UltraSync Beta",
+    "hacs": "0.24.0",
+    "domains": ["sensor"],
+    "iot_class": "Local Polling",
+    "render_readme": true,
+    "homeassistant": "0.110.0"
+}
