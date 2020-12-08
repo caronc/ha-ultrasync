@@ -2,9 +2,12 @@
 #
 # A custom card for UltraSync Alarm
 #
+# Source: https://github.com/caronc/ha-ultrasync
+# 
 # This card requires that you've pre-installed the resources:
 #  - layout-card: https://github.com/thomasloven/lovelace-layout-card
 #  - button-card: https://github.com/custom-cards/button-card
+#
 #
 type: custom:layout-card
 # Define a 4x2 grid

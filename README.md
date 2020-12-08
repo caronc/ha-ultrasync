@@ -104,7 +104,7 @@ As an example you may want to `arm` your alarm in `stay` mode each night and dis
 
 ## Lovelace UI
 
-A card I use that created and works quite well can be found in this repository as well called `ultrasync_alarm.yaml`.  It requires that you additionally have the following resources already pre-added:
+A card I use that created and works quite well can be found in this repository as well called [`ultrasync_alarm.yaml`](https://raw.githubusercontent.com/caronc/ha-ultrasync/main/ultrasync_alarm.yaml) found at the root of this GitHub repository.  It requires that you additionally have the following resources already pre-added:
 
  - **layout-card**: [Source](https://github.com/thomasloven/lovelace-layout-card)
  - **button-card**: [Source](https://github.com/custom-cards/button-card)
