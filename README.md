@@ -1,6 +1,9 @@
 # UltraSync Integration for Home Assistant
 
-[![hacs](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](hacs.json)
+[![Paypal](https://img.shields.io/badge/paypal-donate-green.svg)](https://paypal.me/lead2gold?locale.x=en_US)
+[![Follow](https://img.shields.io/twitter/follow/l2gnux)](https://twitter.com/l2gnux/)<br/>
+[![HACS](https://img.shields.io/badge/HACS-Default-orange.svg)](hacs.json)
+[![Project Maintenance](https://img.shields.io/badge/maintainer-%40caronc-blue)](https://github.com/caronc)
 
 ![ZeroWire Hub Image](https://raw.githubusercontent.com/caronc/ultrasync/master/static/zerowire_hub.jpeg)
 
@@ -40,6 +43,7 @@ Go to the integrations page in your configuration and click on new **Integration
 ### Sensor
 
 This component will create these sensors in the format of `{ultrasync_hubname}_{sensor}`;  The below example assumes you accept the default name of `UltraSync` (which is still represented in lowercase):
+
 - `ultrasync_area1state`: The Area 1 State
 - `ultrasync_area2state`: The Area 2 State
 - `ultrasync_area3state`: The Area 3 State
@@ -99,6 +103,7 @@ As an example you may want to `arm` your alarm in `stay` mode each night and dis
 ```
 
 ## Lovelace UI
+
 A card I use that created and works quite well can be found in this repository as well called `ultrasync_alarm.yaml`.  It requires that you additionally have the following resources already pre-added:
 
  - **layout-card**: [Source](https://github.com/thomasloven/lovelace-layout-card)
@@ -108,5 +113,5 @@ The `ultrasync_alarm.yaml` looks like this:
 ![Lovelace UltraSync Card](https://raw.githubusercontent.com/caronc/ha-ultrasync/main/ultrasync_alarm-card-preview.gif)
 
 ## Donations
-This software is 100% open source, however [buying me a coffee](https://paypal.me/lead2gold?locale.x=en_US) shows your appreciation and greatly inspires me to continue improving the application. :)
 
+This software is 100% open source, however [buying me a coffee](https://paypal.me/lead2gold?locale.x=en_US) shows your appreciation and greatly inspires me to continue improving the application. :)
