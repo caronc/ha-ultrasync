@@ -6,10 +6,11 @@ from async_timeout import timeout
 import ultrasync
 
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import ZONE_LISTENER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,10 +58,12 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
             # Update our details
             details = self.hub.details(max_age_sec=0)
             if details:
+                async_dispatcher_send(self.hass, ZONE_LISTENER, details['zones'])
+
                 for zone in details["zones"]:
                     if self._zone_delta.get(zone["bank"]) != zone["sequence"]:
                         self.hass.bus.fire(
-                            "ultrasync_sensor_update",
+                            "ultrasync_zone_update",
                             {
                                 "sensor": zone["bank"] + 1,
                                 "name": zone["name"],
@@ -70,6 +73,11 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
                         # Update our sequence
                         self._zone_delta[zone["bank"]] = zone["sequence"]
+
+                    # Set our state:
+                    response["zone{:0>2}_state".format(zone["bank"] + 1)] = zone[
+                        "status"
+                    ]
 
                 for area in details["areas"]:
                     if self._area_delta.get(area["bank"]) != area["sequence"]:

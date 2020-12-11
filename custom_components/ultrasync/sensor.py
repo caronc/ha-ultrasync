@@ -5,11 +5,13 @@ from typing import Callable, List
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import UltraSyncEntity
-from .const import DATA_COORDINATOR, DOMAIN
+from .const import ZONE_LISTENER, DATA_COORDINATOR, DOMAIN
 from .coordinator import UltraSyncDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +47,36 @@ async def async_setup_entry(
         )
 
     async_add_entities(sensors)
+
+    _zones = {}
+
+    @callback
+    def _prepare_zone_sensors(zones: dict) -> None:
+        """Dynamically create sensors based on detected zones."""
+
+        # our list of zones to add
+        sensors = []
+
+        for meta in zones:
+            bank_no = meta['bank']
+            if bank_no not in _zones:
+                # hash our entry
+                _zones[bank_no] = UltraSyncSensor(
+                    coordinator,
+                    entry.entry_id,
+                    entry.data[CONF_NAME],
+                    "zone{:0>2}_state".format(bank_no + 1),
+                    "Zone{}State".format(bank_no + 1),
+                )
+                # Add our bank
+                sensors.append(_zones[bank_no])
+
+        if sensors:
+            async_add_entities(sensors)
+
+    # register our callback which will be called the second we make a
+    # connection to our panel
+    async_dispatcher_connect(hass, ZONE_LISTENER, _prepare_zone_sensors)
 
 
 class UltraSyncSensor(UltraSyncEntity):

@@ -14,3 +14,4 @@ SERVICE_DISARM = "disarm"
 
 DATA_COORDINATOR = "coordinator"
 DATA_UNDO_UPDATE_LISTENER = "undo_update_listener"
+ZONE_LISTENER = "ultrasync_create_zone"
