@@ -15,6 +15,7 @@ from .const import (
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
     DEFAULT_SCAN_INTERVAL,
+    SENSORS,
     DOMAIN,
     SERVICE_AWAY,
     SERVICE_DISARM,
@@ -57,7 +58,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
-        DATA_UNDO_UPDATE_LISTENER: undo_listener,
+        DATA_UNDO_UPDATE_LISTENER: [undo_listener],
+        SENSORS: {},
     }
 
     for component in PLATFORMS:
@@ -82,7 +84,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     )
 
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]()
+        for unsub in hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]:
+            unsub()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

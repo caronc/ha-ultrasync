@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ZONE_LISTENER, DOMAIN
+from .const import SENSOR_UPDATE_LISTENER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,17 +48,13 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
             """Fetch data from UltraSync via sync functions."""
 
             # initialize our response
-            response = {
-                "area01_state": "unknown",
-                "area02_state": "unknown",
-                "area03_state": "unknown",
-                "area04_state": "unknown",
-            }
+            response = {}
 
             # Update our details
             details = self.hub.details(max_age_sec=0)
             if details:
-                async_dispatcher_send(self.hass, ZONE_LISTENER, details['zones'])
+                async_dispatcher_send(
+                    self.hass, SENSOR_UPDATE_LISTENER, details['areas'], details['zones'])
 
                 for zone in details["zones"]:
                     if self._zone_delta.get(zone["bank"]) != zone["sequence"]:
@@ -97,6 +93,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     response["area{:0>2}_state".format(area["bank"] + 1)] = area[
                         "status"
                     ]
+
             self._init = True
 
             # Return our response
