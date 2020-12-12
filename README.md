@@ -43,12 +43,21 @@ Go to the integrations page in your configuration and click on new **Integration
 
 ### Sensor
 
-This component will create these sensors in the format of `{ultrasync_hubname}_{sensor}`;  The below example assumes you accept the default name of `UltraSync` (which is still represented in lowercase):
+Sensors are dynamically generated on the fly.
+
+Sensors follow the following naming convention: `{ultrasync_integration}_{sensor}`.  The `{ultrasync_integration}` refers to the name you called your integration when you set it up (the default is `Ultrasync` so it is referenced in it's slug form `ultrasync`):
 
 - `ultrasync_area1state`: The Area 1 State
 - `ultrasync_area2state`: The Area 2 State
-- `ultrasync_area3state`: The Area 3 State
-- `ultrasync_area4state`: The Area 4 State
+- `ultrasync_areaXstate`: The Area X State
+
+Zone sensors work the same way and only load what is detected:
+
+- `ultrasync_zone1state`: The Zone 1 State
+- `ultrasync_zone2state`: The Zone 2 State
+- `ultrasync_zoneXstate`: The Zone X State
+
+The attributes read from the hub are associated with each Detected Zone and Area; so you can rename them to something more appropriate if you feel the need.
 
 There are several states each sensor can be at, but usually they will be one of the following: `Unknown`, `Ready`, `Not Ready`, `Armed Stay`, and `Armed Away`.  The `Unknown` state is assigned to sensors that are not reporting; they usually sit in the spots of the Area's you're not monitoring.
 
@@ -59,7 +68,9 @@ When an Zone or Sensor changes it's state an event usable for automation is trig
 Possible events are:
 
 - `ultrasync_sensor_update`: The event includes the sensor no, name, and new status it changed to.
-- `ultrasync_area_update`: The event includes the area no, name, and new status it changed to (if it did). **Note**: Area's are sent periodic heartbeats in which case the state will not change at all.
+- `ultrasync_area_update`: The event includes the area no, name, and new status it changed to (if it did).
+
+**Note**: Area's are sent periodic heartbeats with Interlogix devices in which case the state will not change at all.
 
 Example automation to send a message via [Apprise](https://www.home-assistant.io/integrations/apprise/) on a sensor change in your home:
 
@@ -107,8 +118,8 @@ As an example you may want to `arm` your alarm in `stay` mode each night and dis
 
 A card I use that created and works quite well can be found in this repository as well called [`ultrasync_alarm.yaml`](https://raw.githubusercontent.com/caronc/ha-ultrasync/main/ultrasync_alarm.yaml) found at the root of this GitHub repository.  It requires that you additionally have the following resources already pre-added:
 
- - **layout-card**: [Source](https://github.com/thomasloven/lovelace-layout-card)
- - **button-card**: [Source](https://github.com/custom-cards/button-card)
+- **layout-card**: [Source](https://github.com/thomasloven/lovelace-layout-card)
+- **button-card**: [Source](https://github.com/custom-cards/button-card)
 
 The `ultrasync_alarm.yaml` looks like this:
 ![Lovelace UltraSync Card](https://raw.githubusercontent.com/caronc/ha-ultrasync/main/ultrasync_alarm-card-preview.gif)
