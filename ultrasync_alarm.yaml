@@ -32,7 +32,7 @@ cards:
     tap_action:
       action: >
         [[[
-          if (entity.state.startsWith("Armed") || entity.state.includes("Delay"))
+          if (entity.state.startsWith("Armed") || entity.state.includes("Delay") || entity.state.includes("Alarm"))
               return "call-service";
           else
               return "none";
