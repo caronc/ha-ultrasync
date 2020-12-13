@@ -10,15 +10,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .coordinator import UltraSyncDataUpdateCoordinator
 from . import UltraSyncEntity
 from .const import (
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
     DOMAIN,
-    SENSORS,
     SENSOR_UPDATE_LISTENER,
+    SENSORS,
 )
+from .coordinator import UltraSyncDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,16 +35,11 @@ async def async_setup_entry(
 
     # At least one sensor must be pre-created or Home Assistant will not
     # call any updates
-    hass.data[DOMAIN][entry.entry_id][SENSORS]['area01_state'] = \
-        UltraSyncSensor(
-            coordinator,
-            entry.entry_id,
-            entry.data[CONF_NAME],
-            'area01_state',
-            'Area1State')
+    hass.data[DOMAIN][entry.entry_id][SENSORS]["area01_state"] = UltraSyncSensor(
+        coordinator, entry.entry_id, entry.data[CONF_NAME], "area01_state", "Area1State"
+    )
 
-    async_add_entities([
-        hass.data[DOMAIN][entry.entry_id][SENSORS]['area01_state']])
+    async_add_entities([hass.data[DOMAIN][entry.entry_id][SENSORS]["area01_state"]])
 
     @callback
     def _auto_manage_sensors(areas: dict, zones: dict) -> None:
@@ -52,7 +47,9 @@ async def async_setup_entry(
 
         _LOGGER.debug(
             "Entering _auto_manage_sensors with {} area(s), and {} zone(s)".format(
-                len(areas), len(zones)))
+                len(areas), len(zones)
+            )
+        )
 
         # our list of sensors to add
         new_sensors = []
@@ -61,7 +58,7 @@ async def async_setup_entry(
         sensors = hass.data[DOMAIN][entry.entry_id][SENSORS]
 
         for meta in areas:
-            bank_no = meta['bank']
+            bank_no = meta["bank"]
             sensor_id = "area{:0>2}_state".format(bank_no + 1)
             if sensor_id not in sensors:
                 # hash our entry
@@ -76,14 +73,16 @@ async def async_setup_entry(
 
                 # Add our new area sensor
                 new_sensors.append(sensors[sensor_id])
-                _LOGGER.debug("Detected {}.Area{}State".format(entry.data[CONF_NAME], bank_no + 1))
+                _LOGGER.debug(
+                    "Detected {}.Area{}State".format(entry.data[CONF_NAME], bank_no + 1)
+                )
 
             # Update our meta information
             for key, value in meta.items():
                 sensors[sensor_id][key] = value
 
         for meta in zones:
-            bank_no = meta['bank']
+            bank_no = meta["bank"]
             sensor_id = "zone{:0>2}_state".format(bank_no + 1)
             if sensor_id not in sensors:
                 # hash our entry
@@ -98,7 +97,9 @@ async def async_setup_entry(
 
                 # Add our new zone sensor
                 new_sensors.append(sensors[sensor_id])
-                _LOGGER.debug("Detected {}.Zone{}State".format(entry.data[CONF_NAME], bank_no + 1))
+                _LOGGER.debug(
+                    "Detected {}.Zone{}State".format(entry.data[CONF_NAME], bank_no + 1)
+                )
 
             # Update our meta information
             for key, value in meta.items():
