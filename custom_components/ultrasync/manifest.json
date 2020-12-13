@@ -1,6 +1,6 @@
 {
   "domain": "ultrasync",
-  "name": "UltraSync Beta",
+  "name": "UltraSync Alarm Panel Beta",
   "documentation": "https://www.home-assistant.io/integrations/ultrasync",
   "requirements": ["ultrasync==0.9.2"],
   "codeowners": ["@caronc"],
