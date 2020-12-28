@@ -20,7 +20,9 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict):
         """Initialize global UltraSync data updater."""
         self.hub = ultrasync.UltraSync(
-            user=config[CONF_USERNAME], pin=config[CONF_PIN], host=config[CONF_HOST],
+            user=config[CONF_USERNAME],
+            pin=config[CONF_PIN],
+            host=config[CONF_HOST],
         )
 
         self._init = False
@@ -32,7 +34,10 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
         update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=update_interval,
         )
 
     async def _async_update_data(self) -> dict:
