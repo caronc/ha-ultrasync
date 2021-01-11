@@ -2,7 +2,7 @@
 
 [![Paypal](https://img.shields.io/badge/paypal-donate-green.svg)](https://paypal.me/lead2gold?locale.x=en_US)
 [![Follow](https://img.shields.io/twitter/follow/l2gnux)](https://twitter.com/l2gnux/)<br/>
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](hacs.json)
+[![hacs_badge](ttps://img.shields.io/badge/HACS-Default-orange.svg)](hacs.json)
 
 [![Project Maintenance](https://img.shields.io/badge/maintainer-%40caronc-blue)](https://github.com/caronc)
 
@@ -23,10 +23,9 @@ You can only be logged into the ComNav/ZeroWire hub with the same user *once*; a
 ### From HACS
 
 1. Install HACS if you haven't already (see [installation guide](https://hacs.netlify.com/docs/installation/manual)).
-2. Add custom repository `https://github.com/caronc/ha-ultrasync` as "Integration" in the settings tab of HACS.
-3. Find and install **UltraSync Beta** integration in HACS's "Integrations" tab.
-4. Restart your Home Assistant.
-5. Add "UltraSync Beta" integration in Home Assistant's "**Configuration** -> **Integrations** tab.
+1. Find and install **UltraSync Beta** integration in HACS's "Integrations" tab.
+1. Restart your Home Assistant.
+1. Add "UltraSync Beta" integration in Home Assistant's "**Configuration** -> **Integrations** tab.
 
 ### Manual
 
@@ -116,7 +115,7 @@ As an example you may want to `arm` your alarm in `stay` mode each night and dis
 
 ## Lovelace UI
 
-A card I use that created and works quite well can be found in this repository as well called [`ultrasync_alarm.yaml`](https://raw.githubusercontent.com/caronc/ha-ultrasync/main/ultrasync_alarm.yaml) found at the root of this GitHub repository.  It requires that you additionally have the following resources already pre-added:
+A card I use that I created and works quite well can be found in this repository as well called [`ultrasync_alarm.yaml`](https://raw.githubusercontent.com/caronc/ha-ultrasync/main/ultrasync_alarm.yaml) found at the root of this GitHub repository.  It requires that you additionally have the following resources already pre-added:
 
 - **layout-card**: [Source](https://github.com/thomasloven/lovelace-layout-card)
 - **button-card**: [Source](https://github.com/custom-cards/button-card)
