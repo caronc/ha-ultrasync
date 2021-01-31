@@ -2,7 +2,7 @@
 
 [![Paypal](https://img.shields.io/badge/paypal-donate-green.svg)](https://paypal.me/lead2gold?locale.x=en_US)
 [![Follow](https://img.shields.io/twitter/follow/l2gnux)](https://twitter.com/l2gnux/)<br/>
-[![hacs_badge](ttps://img.shields.io/badge/HACS-Default-orange.svg)](hacs.json)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](hacs.json)
 
 [![Project Maintenance](https://img.shields.io/badge/maintainer-%40caronc-blue)](https://github.com/caronc)
 
