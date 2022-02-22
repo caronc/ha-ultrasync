@@ -8,3 +8,31 @@ stay:
 
 disarm:
   description: Disarm the Alarm
+
+bypass:
+  description: Bypass a zone
+  fields:
+    zone:
+      name: Zone
+      description: The zone to bypass
+      required: true
+      example: 1
+      selector:
+        number:
+          mode: box
+          min: 1
+          max: 100
+
+unbypass:
+  description: Unbypass a zone
+  fields:
+    zone:
+      name: Zone
+      description: The zone to unbypass
+      required: true
+      example: 1
+      selector:
+        number:
+          mode: box
+          min: 1
+          max: 100

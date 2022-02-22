@@ -11,6 +11,8 @@ DEFAULT_NAME = "UltraSync"
 SERVICE_AWAY = "away"
 SERVICE_STAY = "stay"
 SERVICE_DISARM = "disarm"
+SERVICE_BYPASS = "bypass"
+SERVICE_UNBYPASS = "unbypass"
 
 # Index used for managing loaded sensors
 SENSORS = "sensors"
