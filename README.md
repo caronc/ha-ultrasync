@@ -1,9 +1,8 @@
 # UltraSync Integration for Home Assistant
 
-[![Paypal](https://img.shields.io/badge/paypal-donate-green.svg)](https://paypal.me/lead2gold?locale.x=en_US)
-[![Follow](https://img.shields.io/twitter/follow/l2gnux)](https://twitter.com/l2gnux/)<br/>
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](hacs.json)
-
+[![Paypal](https://img.shields.io/badge/paypal-donate-green.svg)](https://paypal.me/lead2gold)
+[![Follow](https://img.shields.io/twitter/follow/l2gnux)](https://twitter.com/l2gnux/)<br>
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/caronc/ha-ultrasync/blob/main/hacs.json)<br>
 [![Project Maintenance](https://img.shields.io/badge/maintainer-%40caronc-blue)](https://github.com/caronc)
 
 ![ZeroWire Hub Image](https://raw.githubusercontent.com/caronc/ultrasync/master/static/zerowire_hub.jpeg)
@@ -113,7 +112,7 @@ As an example you may want to `arm` your alarm in `stay` mode each night and dis
     service: ultrasync.disarm
 ```
 
-## Lovelace UI
+## UI
 
 A card I use that I created and works quite well can be found in this repository as well called [`ultrasync_alarm.yaml`](https://raw.githubusercontent.com/caronc/ha-ultrasync/main/ultrasync_alarm.yaml) found at the root of this GitHub repository.  It requires that you additionally have the following resources already pre-added:
 
