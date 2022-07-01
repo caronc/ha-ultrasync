@@ -19,6 +19,8 @@ from .const import (
     SERVICE_AWAY,
     SERVICE_DISARM,
     SERVICE_STAY,
+    SERVICE_BYPASS,
+    SERVICE_UNBYPASS,
 )
 from .coordinator import UltraSyncDataUpdateCoordinator
 
@@ -108,9 +110,19 @@ def _async_register_services(
         """Service call to disable alarm in UltraSync Hub."""
         coordinator.hub.set_alarm(state=AlarmScene.DISARMED)
 
+    def bypass(call) -> None:
+        """Service call to bypass a zone in UltraSync Hub."""
+        coordinator.hub.set_zone_bypass(state=True, zone=call.data['zone'])
+
+    def unbypass(call) -> None:
+        """Service call to unbypass a zone in UltraSync Hub."""
+        coordinator.hub.set_zone_bypass(state=False, zone=call.data['zone'])
+
     hass.services.async_register(DOMAIN, SERVICE_AWAY, away, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_STAY, stay, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_DISARM, disarm, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, SERVICE_BYPASS, bypass)
+    hass.services.async_register(DOMAIN, SERVICE_UNBYPASS, unbypass)
 
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
