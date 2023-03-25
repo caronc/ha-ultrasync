@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "documentation": "https://www.home-assistant.io/integrations/ultrasync",
   "issue_tracker": "https://github.com/caronc/ha-ultrasync/issues",
-  "requirements": ["ultrasync==0.9.5"],
+  "requirements": ["ultrasync==0.9.6"],
   "codeowners": ["@caronc"],
   "config_flow": true
 }
