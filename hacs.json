@@ -1,5 +1,5 @@
 {
-    "name": "UltraSync Beta",
+    "name": "UltraSync",
     "hacs": "0.24.0",
     "domains": ["sensor"],
     "render_readme": true,

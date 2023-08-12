@@ -22,16 +22,16 @@ You can only be logged into the ComNav/ZeroWire hub with the same user *once*; a
 ### From HACS
 
 1. Install HACS if you haven't already (see [installation guide](https://hacs.netlify.com/docs/installation/manual)).
-1. Find and install **UltraSync Beta** integration in HACS's "Integrations" tab.
+1. Find and install **UltraSync** integration in HACS's "Integrations" tab.
 1. Restart your Home Assistant.
-1. Add "UltraSync Beta" integration in Home Assistant's "**Configuration** -> **Integrations** tab.
+1. Add "UltraSync" integration in Home Assistant's "**Configuration** -> **Integrations** tab.
 
 ### Manual
 
 1. Download and unzip the [repo archive](https://github.com/caronc/ha-ultrasync/archive/master.zip). (You could also click "Download ZIP" after pressing the green button in the repo, alternatively, you could clone the repo from SSH add-on).
 2. Copy contents of the archive/repo into your `/config` directory.
 3. Restart your Home Assistant.
-4. Add "UltraSync Beta" integration in Home Assistant's "**Configuration** -> **Integrations** tab.
+4. Add "UltraSync" integration in Home Assistant's "**Configuration** -> **Integrations** tab.
 
 ## Configuration
 
