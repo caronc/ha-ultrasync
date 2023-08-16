@@ -115,7 +115,7 @@ async def async_setup_entry(
             output_name = meta["name"]
             sensor_id = f"output_{output_name}"
             detected_sensors.add(sensor_id)
-            if sensor_id not in sensnors:
+            if sensor_id not in sensors:
                 # hash our entry
                 sensors[sensor_id] = UltraSyncSensor(
                     coordinator,
