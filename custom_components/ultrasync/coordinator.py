@@ -99,22 +99,28 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                         "status"
                     ]
                 
+                output_index = 1
                 for output in details["outputs"]:
-                    if self._output_delta.get(output["name"]) != output["state"]:
+                    # Use the output name if it's not empty, otherwise use the index
+                    output_identifier = output["name"] if output["name"].strip() else f"output{output_index}"
+
+                    if self._output_delta.get(output_identifier) != output["state"]:
                         self.hass.bus.fire(
                             "ultrasync_output_update",
                             {
-                                "name": output["name"],
+                                "name": output_identifier,
                                 "status": output["state"],
                             },
                         )
 
                         # Update our sequence
-                        self._output_delta[output["name"]] = output["state"]
+                        self._output_delta[output_identifier] = output["state"]
 
                     # Set our state:
-                    response[f"output_{output['name']}"] = output["state"]
+                    response[f"output_{output_identifier}"] = output["state"]
 
+                    output_index += 1
+                    
             self._init = True
 
             # Return our response
