@@ -124,7 +124,7 @@ async def async_setup_entry(
                     entry.data[CONF_NAME],
                     sensor_id,
                     # Friendly Name
-                    f"{output_name} State",
+                    f"Output {output_index}",
                 )
 
                 # Add our new output sensor
