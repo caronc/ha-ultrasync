@@ -114,7 +114,7 @@ async def async_setup_entry(
         output_index = 1
         for meta in outputs:
             output_name = meta["name"]
-            sensor_id = f"output_{output_index}state"
+            sensor_id = f"output_{output_name}"
             detected_sensors.add(sensor_id)
             if sensor_id not in sensors:
                 # hash our entry
