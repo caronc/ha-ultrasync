@@ -121,6 +121,8 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
                     output_index += 1
 
+                    _LOGGER.debug("Updated response keys: %s", response.keys())
+
             self._init = True
 
             # Return our response
