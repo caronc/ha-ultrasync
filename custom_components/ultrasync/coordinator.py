@@ -100,20 +100,23 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     ]
                 
                 for output in details["outputs"]:
-                    if self._output_delta.get(output["name"]) != output["state"]:
+                    _LOGGER.info(output)
+                    if self._output_delta.get(output["name"]) != output["status"]:
                         self.hass.bus.fire(
                             "ultrasync_output_update",
                             {
-                                "name": output["name"],
-                                "status": output["state"],
+                                "name": output["name"] + 1,
+                                "status": output["status"],
                             },
                         )
 
                         # Update our sequence
-                        self._output_delta[output["name"]] = output["state"]
+                        self._output_delta[output["name"]] = output["status"]
 
                     # Set our state:
-                    response[f"output_{output['name']}"] = output["state"]
+                    response["output{}state".format(output["name"] + 1)] = output[
+                        "status"
+                    ]
 
             self._init = True
 
