@@ -111,9 +111,10 @@ async def async_setup_entry(
             for key, value in meta.items():
                 sensors[sensor_id][key] = value
 
+        output_index = 1
         for meta in outputs:
-            output_no = meta["name"]
-            sensor_id = "output{}state".format(output_no + 1)
+            output_name = meta["name"]
+            sensor_id = "output{}state".format(output_index)
             detected_sensors.add(sensor_id)
             if sensor_id not in sensors:
                 # hash our entry
@@ -123,18 +124,20 @@ async def async_setup_entry(
                     entry.data[CONF_NAME],
                     sensor_id,
                     # Friendly Name
-                    "Output{}State".format(output_no + 1),
+                    "Output{}State".format(output_index),
                 )
 
                 # Add our new output sensor
                 new_sensors.append(sensors[sensor_id])
                 _LOGGER.debug(
-                    "Detected %s.Output%dState", entry.data[CONF_NAME], output_no + 1
+                    "Detected %s.Output%dState", entry.data[CONF_NAME], output_index
                 )
             
             # Update our meta information
             for key, value in meta.items():
                 sensors[sensor_id][key] = value
+
+            output_index += 1
 
         if new_sensors:
             # Add our newly detected sensors

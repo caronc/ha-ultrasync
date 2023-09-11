@@ -101,7 +101,6 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                 
                 for output in details["outputs"]:
                     if self._output_delta.get(output["name"]) != output["state"]:
-                        _LOGGER.debug(output)
                         self.hass.bus.fire(
                             "ultrasync_output_update",
                             {
