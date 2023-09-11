@@ -98,7 +98,8 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     response["area{:0>2}_state".format(area["bank"] + 1)] = area[
                         "status"
                     ]
-                
+
+                output_index = 1
                 for output in details["outputs"]:
                     if self._output_delta.get(output["name"]) != output["state"]:
                         self.hass.bus.fire(
@@ -113,9 +114,10 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                         self._output_delta[output["name"]] = output["state"]
 
                     # Set our state:
-                    response["output{}state".format(output["name"])] = output[
+                    response["output{}state".format(output_index)] = output[
                         "state"
                     ]
+                    output_index += 1
 
             self._init = True
 
