@@ -55,9 +55,17 @@ Zone sensors work the same way and only load what is detected:
 - `ultrasync_zone2state`: The Zone 2 State
 - `ultrasync_zoneXstate`: The Zone X State
 
-The attributes read from the hub are associated with each Detected Zone and Area; so you can rename them to something more appropriate if you feel the need.
+Output sensors also work the same way and only load what is detected:
 
-There are several states each sensor can be at, but usually they will be one of the following: `Unknown`, `Ready`, `Not Ready`, `Armed Stay`, and `Armed Away`.  The `Unknown` state is assigned to sensors that are not reporting; they usually sit in the spots of the Area's you're not monitoring.
+- `ultrasync_output1state`: The Output 1 State
+- `ultrasync_output2state`: The Output 2 State
+- `ultrasync_outputXstate`: The Output X State
+
+The attributes read from the hub are associated with each Detected Zone, Area and Output; so you can rename them to something more appropriate if you feel the need.
+
+There are several states each Zone and Area sensor can be at, but usually they will be one of the following: `Unknown`, `Ready`, `Not Ready`, `Armed Stay`, and `Armed Away`.  The `Unknown` state is assigned to sensors that are not reporting; they usually sit in the spots of the Area's you're not monitoring.
+
+The state of Output sensors will ALWAYS remain `0` whether it has been turned on or off. This is normal, the Output sensor simply acts as an entity to activate the `switch` service.
 
 ### Event Automation
 
@@ -91,6 +99,8 @@ Available services:
 - `stay`: Set alarm scene to Stay Mode
 - `away`: Set alarm scene to Away Mode (fully activate Alarm)
 - `disarm`: Disarm the alarm
+- `bypass`: Bypasses a specified Zone
+- `switch`: Activates an Output Control entity
 
 As an example you may want to `arm` your alarm in `stay` mode each night and disarm it in the morning like so:
 
@@ -111,6 +121,25 @@ As an example you may want to `arm` your alarm in `stay` mode each night and dis
   action:
     service: ultrasync.disarm
 ```
+
+To activate the `bypass` service, simply specify the Zone number and call the service like so:
+
+``` yaml
+service: ultrasync.bypass
+data:
+  zone: 1
+
+```
+
+To activate the `switch` service, simply specify the Output number along with the desired state for the Output (0 for off, 1 for on) like so:
+
+``` yaml
+service: ultrasync.switch
+data:
+  output: 1
+  state: 1
+```
+
 
 ## UI
 
