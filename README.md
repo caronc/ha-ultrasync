@@ -121,8 +121,7 @@ As an example you may want to `arm` your alarm in `stay` mode each night and dis
   action:
     service: ultrasync.disarm
 ```
-
-To activate the `bypass` service, simply specify the Zone number and call the service like so:
+To activate the `bypass` service, simply specify the Zone entity number and call the service like so:
 
 ``` yaml
 service: ultrasync.bypass
@@ -131,7 +130,7 @@ data:
 
 ```
 
-To activate the `switch` service, simply specify the Output number along with the desired state for the Output (0 for off, 1 for on) like so:
+To activate the `switch` service, simply specify the Output entity number along with the desired state for the Output (0 for off, 1 for on) like so:
 
 ``` yaml
 service: ultrasync.switch
