@@ -42,13 +42,14 @@ async def async_setup_entry(
     async_add_entities([hass.data[DOMAIN][entry.entry_id][SENSORS]["area01_state"]])
 
     @callback
-    def _auto_manage_sensors(areas: dict, zones: dict) -> None:
+    def _auto_manage_sensors(areas: dict, zones: dict, outputs: dict) -> None:
         """Dynamically create/delete sensors based on what was detected by the hub."""
 
         _LOGGER.debug(
-            "Entering _auto_manage_sensors with %d area(s), and %d zone(s)",
+            "Entering _auto_manage_sensors with %d area(s), %d zone(s) and %d output(s)",
             len(areas),
             len(zones),
+            len(outputs)
         )
 
         # our list of sensors to add
@@ -109,6 +110,34 @@ async def async_setup_entry(
             # Update our meta information
             for key, value in meta.items():
                 sensors[sensor_id][key] = value
+
+        output_index = 1
+        for meta in outputs:
+            output_name = meta["name"]
+            sensor_id = "output{}state".format(output_index)
+            detected_sensors.add(sensor_id)
+            if sensor_id not in sensors:
+                # hash our entry
+                sensors[sensor_id] = UltraSyncSensor(
+                    coordinator,
+                    entry.entry_id,
+                    entry.data[CONF_NAME],
+                    sensor_id,
+                    # Friendly Name
+                    "Output{}State".format(output_index),
+                )
+
+                # Add our new output sensor
+                new_sensors.append(sensors[sensor_id])
+                _LOGGER.debug(
+                    "Detected %s.Output%dState", entry.data[CONF_NAME], output_index
+                )
+            
+            # Update our meta information
+            for key, value in meta.items():
+                sensors[sensor_id][key] = value
+
+            output_index += 1
 
         if new_sensors:
             # Add our newly detected sensors

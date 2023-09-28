@@ -21,6 +21,7 @@ from .const import (
     SERVICE_STAY,
     SERVICE_BYPASS,
     SERVICE_UNBYPASS,
+    SERVICE_SWITCH
 )
 from .coordinator import UltraSyncDataUpdateCoordinator
 
@@ -117,13 +118,20 @@ def _async_register_services(
     def unbypass(call) -> None:
         """Service call to unbypass a zone in UltraSync Hub."""
         coordinator.hub.set_zone_bypass(state=False, zone=call.data['zone'])
+    
+    def switch(call) -> None:
+        """Service call to switch on/off an output control in UltraSync Hub."""
+        coordinator.hub.set_output_control(output=call.data['output'], state=call.data['state'])
 
     hass.services.async_register(DOMAIN, SERVICE_AWAY, away, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_STAY, stay, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_DISARM, disarm, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_BYPASS, bypass)
     hass.services.async_register(DOMAIN, SERVICE_UNBYPASS, unbypass)
-
+    hass.services.async_register(DOMAIN, SERVICE_SWITCH, switch, schema=vol.Schema({
+        vol.Required('output'): vol.Coerce(int),
+        vol.Required('state'): vol.Coerce(int),
+    }))
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
     """Handle options update."""

@@ -36,3 +36,27 @@ unbypass:
           mode: box
           min: 1
           max: 100
+
+switch:
+  description: Switch an output control on or off.
+  fields:
+    output:
+      name: Output
+      description: The output control to switch.
+      required: true
+      example: 1
+      selector:
+        number:
+          mode: box
+          min: 1
+          max: 100
+    state:
+      name: State
+      description: The desired state for the output (0 for off, 1 for on).
+      required: true
+      example: 1
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 1

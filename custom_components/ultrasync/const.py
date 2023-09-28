@@ -13,6 +13,7 @@ SERVICE_STAY = "stay"
 SERVICE_DISARM = "disarm"
 SERVICE_BYPASS = "bypass"
 SERVICE_UNBYPASS = "unbypass"
+SERVICE_SWITCH = "switch"
 
 # Index used for managing loaded sensors
 SENSORS = "sensors"

@@ -30,6 +30,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
         # Used to track delta (for change tracking)
         self._area_delta = {}
         self._zone_delta = {}
+        self._output_delta = {}
 
         update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 
@@ -57,6 +58,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     SENSOR_UPDATE_LISTENER,
                     details["areas"],
                     details["zones"],
+                    details["outputs"]
                 )
 
                 for zone in details["zones"]:
@@ -96,6 +98,26 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     response["area{:0>2}_state".format(area["bank"] + 1)] = area[
                         "status"
                     ]
+
+                output_index = 1
+                for output in details["outputs"]:
+                    if self._output_delta.get(output["name"]) != output["state"]:
+                        self.hass.bus.fire(
+                            "ultrasync_output_update",
+                            {
+                                "name": output["name"],
+                                "status": output["state"],
+                            },
+                        )
+
+                        # Update our sequence
+                        self._output_delta[output["name"]] = output["state"]
+
+                    # Set our state:
+                    response["output{}state".format(output_index)] = output[
+                        "state"
+                    ]
+                    output_index += 1
 
             self._init = True
 
