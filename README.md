@@ -124,19 +124,24 @@ As an example you may want to `arm` your alarm in `stay` mode each night and dis
 To activate the `bypass` service, simply specify the Zone entity number and call the service like so:
 
 ``` yaml
-service: ultrasync.bypass
-data:
-  zone: 1
-
+# Bypasses Zone 1
+- alias: Bypass Sliding Door
+  action:
+    service: ultrasync.bypass
+    data:
+      zone: 1
 ```
 
 To activate the `switch` service, simply specify the Output entity number along with the desired state for the Output (0 for off, 1 for on) like so:
 
 ``` yaml
-service: ultrasync.switch
-data:
-  output: 1
-  state: 1
+# Activates Output 1 to the on position
+- alias: Open Garage Door relay
+  action:
+    service: ultrasync.switch
+    data:
+      output: 1
+      state: 1
 ```
 
 
