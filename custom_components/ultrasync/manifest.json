@@ -2,7 +2,7 @@
   "domain": "ultrasync",
   "name": "UltraSync Alarm Panel",
   "iot_class": "local_polling",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "documentation": "https://www.home-assistant.io/integrations/ultrasync",
   "issue_tracker": "https://github.com/caronc/ha-ultrasync/issues",
   "requirements": ["ultrasync==1.0.0"],
