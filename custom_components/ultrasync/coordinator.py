@@ -44,87 +44,82 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from UltraSync Hub."""
 
-        def _update_data() -> dict:
-            """Fetch data from UltraSync via sync functions."""
-
-            # initialize our response
-            response = {}
-
-            # Update our details
-            details = self.hub.details(max_age_sec=0)
-            if details:
-                async_dispatcher_send(
-                    self.hass,
-                    SENSOR_UPDATE_LISTENER,
-                    details["areas"],
-                    details["zones"],
-                    details["outputs"]
-                )
-
-                for zone in details["zones"]:
-                    if self._zone_delta.get(zone["bank"]) != zone["sequence"]:
-                        self.hass.bus.fire(
-                            "ultrasync_zone_update",
-                            {
-                                "sensor": zone["bank"] + 1,
-                                "name": zone["name"],
-                                "status": zone["status"],
-                            },
-                        )
-
-                        # Update our sequence
-                        self._zone_delta[zone["bank"]] = zone["sequence"]
-
-                    # Set our state:
-                    response["zone{:0>2}_state".format(zone["bank"] + 1)] = zone[
-                        "status"
-                    ]
-
-                for area in details["areas"]:
-                    if self._area_delta.get(area["bank"]) != area["sequence"]:
-                        self.hass.bus.fire(
-                            "ultrasync_area_update",
-                            {
-                                "area": area["bank"] + 1,
-                                "name": area["name"],
-                                "status": area["status"],
-                            },
-                        )
-
-                        # Update our sequence
-                        self._area_delta[area["bank"]] = area["sequence"]
-
-                    # Set our state:
-                    response["area{:0>2}_state".format(area["bank"] + 1)] = area[
-                        "status"
-                    ]
-
-                output_index = 1
-                for output in details["outputs"]:
-                    if self._output_delta.get(output["name"]) != output["state"]:
-                        self.hass.bus.fire(
-                            "ultrasync_output_update",
-                            {
-                                "name": output["name"],
-                                "status": output["state"],
-                            },
-                        )
-
-                        # Update our sequence
-                        self._output_delta[output["name"]] = output["state"]
-
-                    # Set our state:
-                    response["output{}state".format(output_index)] = output[
-                        "state"
-                    ]
-                    output_index += 1
-
-            self._init = True
-
-            # Return our response
-            return response
+        # initialize our response
+        response = {}
 
         # The hub can sometimes take a very long time to respond; wait
-        # 10 seconds before giving up
         async with timeout(10):
-            return await self.hass.async_add_executor_job(_update_data)
+            details = await self.hass.async_add_executor_job(lambda: self.hub.details(max_age_sec=0))
+
+        # Update our details
+        if details:
+            async_dispatcher_send(
+                self.hass,
+                SENSOR_UPDATE_LISTENER,
+                details["areas"],
+                details["zones"],
+                details["outputs"]
+            )
+
+            for zone in details["zones"]:
+                if self._zone_delta.get(zone["bank"]) != zone["sequence"]:
+                    self.hass.bus.fire(
+                        "ultrasync_zone_update",
+                        {
+                            "sensor": zone["bank"] + 1,
+                            "name": zone["name"],
+                            "status": zone["status"],
+                        },
+                    )
+
+                    # Update our sequence
+                    self._zone_delta[zone["bank"]] = zone["sequence"]
+
+                # Set our state:
+                response["zone{:0>2}_state".format(zone["bank"] + 1)] = zone[
+                    "status"
+                ]
+
+            for area in details["areas"]:
+                if self._area_delta.get(area["bank"]) != area["sequence"]:
+                    self.hass.bus.fire(
+                        "ultrasync_area_update",
+                        {
+                            "area": area["bank"] + 1,
+                            "name": area["name"],
+                            "status": area["status"],
+                        },
+                    )
+
+                    # Update our sequence
+                    self._area_delta[area["bank"]] = area["sequence"]
+
+                # Set our state:
+                response["area{:0>2}_state".format(area["bank"] + 1)] = area[
+                    "status"
+                ]
+
+            output_index = 1
+            for output in details["outputs"]:
+                if self._output_delta.get(output["name"]) != output["state"]:
+                    self.hass.bus.fire(
+                        "ultrasync_output_update",
+                        {
+                            "name": output["name"],
+                            "status": output["state"],
+                        },
+                    )
+
+                    # Update our sequence
+                    self._output_delta[output["name"]] = output["state"]
+
+                # Set our state:
+                response["output{}state".format(output_index)] = output[
+                    "state"
+                ]
+                output_index += 1
+
+        self._init = True
+
+        # Return our response
+        return response

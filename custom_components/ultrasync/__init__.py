@@ -65,8 +65,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     }
 
     for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+        entry.async_create_task(
+            hass, hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
     _async_register_services(hass, coordinator)
@@ -118,7 +118,7 @@ def _async_register_services(
     def unbypass(call) -> None:
         """Service call to unbypass a zone in UltraSync Hub."""
         coordinator.hub.set_zone_bypass(state=False, zone=call.data['zone'])
-    
+
     def switch(call) -> None:
         """Service call to switch on/off an output control in UltraSync Hub."""
         coordinator.hub.set_output_control(output=call.data['output'], state=call.data['state'])
