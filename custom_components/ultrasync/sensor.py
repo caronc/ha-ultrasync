@@ -145,7 +145,7 @@ async def async_setup_entry(
 
         for sensor_id in set(sensors.keys()).difference(detected_sensors):
             # Tidy up sensors leaving our listing
-            hass.async_create_task(sensors[sensor_id].async_remove())
+            entry.async_create_task(hass, sensors[sensor_id].async_remove())
             del sensors[sensor_id]
 
     # register our callback which will be called the second we make a
