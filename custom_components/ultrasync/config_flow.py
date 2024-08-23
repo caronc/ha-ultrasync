@@ -10,8 +10,8 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import callback, HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 import ultrasync
 import voluptuous as vol
 
@@ -25,7 +25,7 @@ class AuthFailureException(IOError):
     """A general exception we can use to track Authentication failures."""
 
 
-def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
+def validate_input(hass: HomeAssistant, data: dict) -> Dict[str, Any]:
     """Validate the user input allows us to connect."""
 
     usync = ultrasync.UltraSync(
