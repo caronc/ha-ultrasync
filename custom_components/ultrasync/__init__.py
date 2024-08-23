@@ -64,10 +64,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         SENSORS: {},
     }
 
-    for component in PLATFORMS:
-        entry.async_create_task(
-            hass, hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _async_register_services(hass, coordinator)
 
