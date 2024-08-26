@@ -4,8 +4,8 @@ import logging
 
 from async_timeout import timeout
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import ultrasync
 
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching UltraSync data."""
 
-    def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict):
+    def __init__(self, hass: HomeAssistant, *, config: dict, options: dict):
         """Initialize global UltraSync data updater."""
         self.hub = ultrasync.UltraSync(
             user=config[CONF_USERNAME],
