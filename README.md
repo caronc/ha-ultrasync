@@ -155,6 +155,148 @@ A card I use that I created and works quite well can be found in this repository
 The `ultrasync_alarm.yaml` looks like this:
 ![Lovelace UltraSync Card](https://raw.githubusercontent.com/caronc/ha-ultrasync/main/ultrasync_alarm-card-preview.gif)
 
+## Apple Homekit
+
+If you are running Homekit in conjunction with Home Assistant via a Homekit Bridge and wish to integrate your Ultrasync panel (via this integration), you can achieve this using a combination of the Alarm Control Panel Template (Home Assistant integration) and some custom automations. This is detailed below.
+
+### Alarm Control Panel Template
+
+Update your Home Assistant Configuration.yaml file to include the below:
+
+``` yaml
+#Alarm Config to Allow Homekit Integration
+alarm_control_panel:
+  - platform: manual
+    name: ultrasync_alarm_ghost
+    code_arm_required: false
+    arming_time: 0
+    delay_time: 0
+    trigger_time: 300
+    disarmed:
+      trigger_time: 0
+    armed_away:
+      arming_time: 30
+      delay_time: 20
+    armed_home:
+      arming_time: 15
+      delay_time: 10
+  - platform: template
+    panels:
+      ultrasync_alarm:
+        value_template: "{{ states('alarm_control_panel.ultrasync_alarm_ghost') }}"
+        code_arm_required: false
+        arm_away:
+          service: alarm_control_panel.alarm_arm_away
+          target:
+            entity_id: alarm_control_panel.ultrasync_alarm_ghost
+        arm_home:
+          service: alarm_control_panel.alarm_arm_home
+          target:
+            entity_id: alarm_control_panel.ultrasync_alarm_ghost
+        disarm:
+          service: alarm_control_panel.alarm_disarm
+          target:
+            entity_id: alarm_control_panel.ultrasync_alarm_ghost
+```
+
+### Automations
+
+Create the following six automations to handle arming/disarming the panel from the Home app, as well as to ensure the status of the panel is consistent in the app when it is armed/disarmed from elsewhere.
+
+``` yaml
+alias: Alarm - Disarm
+description: Used by HomeKit Alarm Integration
+trigger:
+  - platform: state
+    entity_id:
+      - alarm_control_panel.ultrasync_alarm_ghost
+    to: disarmed
+condition: []
+action:
+  - service: ultrasync.disarm
+    data: {}
+mode: single
+
+alias: Alarm Arming - Away
+description: Used by HomeKit Alarm Integration
+trigger:
+  - platform: state
+    entity_id:
+      - alarm_control_panel.ultrasync_alarm_ghost
+    to: armed_away
+condition: []
+action:
+  - service: ultrasync.away
+    data: {}
+mode: single
+
+alias: Alarm Arming - Stay
+description: Used by HomeKit Alarm Integration
+trigger:
+  - platform: state
+    entity_id:
+      - alarm_control_panel.ultrasync_alarm_ghost
+    to: armed_home
+condition: []
+action:
+  - service: ultrasync.stay
+    data: {}
+mode: single
+
+alias: Updates HomeKit Alarm Status to Armed - Away
+description: Used by HomeKit Alarm Integration
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.ultrasync_area1state
+    from: null
+    to: Armed Away
+condition: []
+action:
+  - service: alarm_control_panel.alarm_arm_away
+    metadata: {}
+    data: {}
+    target:
+      entity_id: alarm_control_panel.ultrasync_alarm_ghost
+mode: single
+
+alias: Updates HomeKit Alarm Status to Armed - Stay
+description: Used by HomeKit Alarm Integration
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.ultrasync_area1state
+    from: null
+    to: Armed Stay
+condition: []
+action:
+  - service: alarm_control_panel.alarm_arm_home
+    target:
+      entity_id:
+        - alarm_control_panel.ultrasync_alarm_ghost
+    data: {}
+mode: single
+
+alias: Updates HomeKit Alarm Status to Disarmed
+description: Used by HomeKit Alarm Integration
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.ultrasync_area1state
+    to: Ready
+    from:
+      - Sensor Bypass
+      - Armed Away
+condition: []
+action:
+  - service: alarm_control_panel.alarm_disarm
+    target:
+      entity_id:
+        - alarm_control_panel.ultrasync_alarm_ghost
+    data: {}
+mode: single
+```
+
 ## Donations
 
 This software is 100% open source, however [buying me a coffee](https://paypal.me/lead2gold?locale.x=en_US) shows your appreciation and greatly inspires me to continue improving the application. :)
