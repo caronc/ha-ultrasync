@@ -14,6 +14,9 @@ SERVICE_DISARM = "disarm"
 SERVICE_BYPASS = "bypass"
 SERVICE_UNBYPASS = "unbypass"
 SERVICE_SWITCH = "switch"
+SERVICE_PANIC = "panic"
+SERVICE_MEDICAL = "medical"
+SERVICE_FIRE = "fire"
 
 # Index used for managing loaded sensors
 SENSORS = "sensors"
