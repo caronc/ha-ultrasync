@@ -4,10 +4,19 @@ away:
   description: Set Alarm to Away
 
 stay:
-  description: Set the Alarm to Stay
+  description: Set Alarm to Stay
 
 disarm:
-  description: Disarm the Alarm
+  description: Set Alarm to Disarmed
+
+fire:
+  description: Set Alarm to Fire Alarm
+
+medical:
+  description: Set Alarm to Medical Alarm
+
+panic:
+  description: Set Alarm to Panic Alarm
 
 bypass:
   description: Bypass a zone
