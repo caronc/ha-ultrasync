@@ -19,6 +19,9 @@ from .const import (
     SERVICE_AWAY,
     SERVICE_DISARM,
     SERVICE_STAY,
+    SERVICE_FIRE,
+    SERVICE_MEDICAL,
+    SERVICE_PANIC,
     SERVICE_BYPASS,
     SERVICE_UNBYPASS,
     SERVICE_SWITCH
@@ -103,6 +106,18 @@ def _async_register_services(
     def stay(call) -> None:
         """Service call to set alarm system to 'stay' mode in UltraSync Hub."""
         coordinator.hub.set_alarm(state=AlarmScene.STAY)
+        
+    def fire(call) -> None:
+        """Service call to set alarm system to 'fire' mode in UltraSync Hub."""
+        coordinator.hub.set_alarm(state=AlarmScene.FIRE)
+
+    def medical(call) -> None:
+        """Service call to set alarm system to 'medical' mode in UltraSync Hub."""
+        coordinator.hub.set_alarm(state=AlarmScene.MEDICAL)
+
+    def panic(call) -> None:
+        """Service call to set alarm system to 'panic' mode in UltraSync Hub."""
+        coordinator.hub.set_alarm(state=AlarmScene.PANIC)
 
     def disarm(call) -> None:
         """Service call to disable alarm in UltraSync Hub."""
@@ -122,6 +137,9 @@ def _async_register_services(
 
     hass.services.async_register(DOMAIN, SERVICE_AWAY, away, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_STAY, stay, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, SERVICE_FIRE, fire, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, SERVICE_MEDICAL, medical, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, SERVICE_PANIC, panic, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_DISARM, disarm, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_BYPASS, bypass)
     hass.services.async_register(DOMAIN, SERVICE_UNBYPASS, unbypass)
