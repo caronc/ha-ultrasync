@@ -60,7 +60,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                 details["areas"],
                 details["zones"],
                 details["outputs"],
-                details["historyData"]
+                details["history_data"]
             )
 
             # Process zone data
@@ -84,7 +84,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                 ]
 
             # Process history data (if present)
-            for history in details["historyData"]:
+            for history in details["history_data"]:
                 history_name = history["area_name"]
                 sensor_id = "history_name{}state".format(history_name)
                 state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
@@ -118,8 +118,8 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     self._area_delta[area["bank"]] = area["sequence"]
 
                     # Update our history when area state changes (if history data is present)
-                    if "history" in details and details["historyData"]:
-                        for history in details["historyData"]:
+                    if "history" in details and details["history_data"]:
+                        for history in details["history_data"]:
                             history_name = history["area_name"]
                             sensor_id = "history_name{}state".format(history_name)
                             state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])

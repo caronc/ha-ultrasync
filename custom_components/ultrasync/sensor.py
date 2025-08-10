@@ -41,12 +41,12 @@ async def async_setup_entry(
     async_add_entities([hass.data[DOMAIN][entry.entry_id][SENSORS]["area01_state"]])
 
     @callback
-    def _auto_manage_sensors(areas: dict, zones: dict, outputs: dict, historyData: dict) -> None:
+    def _auto_manage_sensors(areas: dict, zones: dict, outputs: dict, history_data: dict) -> None:
         """Dynamically create/delete sensors based on what was detected by the hub."""
 
         _LOGGER.debug(
             "Entering _auto_manage_sensors with history, %d area(s), %d zone(s) and %d output(s)",
-            len(historyData),
+            len(history_data),
             len(areas),
             len(zones),
             len(outputs)
@@ -139,7 +139,7 @@ async def async_setup_entry(
 
             output_index += 1
 
-        for meta in historyData:
+        for meta in history_data:
             history_name = meta["area_name"]
             sensor_id = "history_name{}state".format(history_name)
             detected_sensors.add(sensor_id)
