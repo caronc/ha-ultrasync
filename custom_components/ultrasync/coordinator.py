@@ -31,6 +31,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
         self._area_delta = {}
         self._zone_delta = {}
         self._output_delta = {}
+        self._history_delta = {}
 
         update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 
@@ -58,9 +59,11 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                 SENSOR_UPDATE_LISTENER,
                 details["areas"],
                 details["zones"],
-                details["outputs"]
+                details["outputs"],
+                details["history_data"]
             )
 
+            # Process zone data
             for zone in details["zones"]:
                 if self._zone_delta.get(zone["bank"]) != zone["sequence"]:
                     self.hass.bus.fire(
@@ -80,8 +83,28 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     "status"
                 ]
 
+            # Process history data (if present)
+            for history in details["history_data"]:
+                history_name = history["area_name"]
+                sensor_id = "history_name{}state".format(history_name)
+                state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
+                response[sensor_id] = state_value
+
+                # Fire event to get initial state
+                self.hass.bus.fire(
+                    "ultrasync_history_update",
+                    {
+                        "name": history_name,
+                        "status": history["action"],
+                        "timestamp": history["timestamp"],
+                        "user": history["user"],
+                    },
+                )
+
+            # Process area data
             for area in details["areas"]:
-                if self._area_delta.get(area["bank"]) != area["sequence"]:
+                area_changed = self._area_delta.get(area["bank"]) != area["sequence"]
+                if area_changed:
                     self.hass.bus.fire(
                         "ultrasync_area_update",
                         {
@@ -94,11 +117,31 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     # Update our sequence
                     self._area_delta[area["bank"]] = area["sequence"]
 
+                    # Update our history when area state changes (if history data is present)
+                    if "history" in details and details["history_data"]:
+                        for history in details["history_data"]:
+                            history_name = history["area_name"]
+                            sensor_id = "history_name{}state".format(history_name)
+                            state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
+                            if history_name == area["name"]:
+                               self.hass.bus.fire(
+                                   "ultrasync_history_update",
+                                   {
+                                        "name": history_name,
+                                        "status": history["action"],
+                                        "timestamp": history["timestamp"],
+                                        "user": history["user"],
+                                   },
+                               )
+                               self._history_delta[history["area_name"]] = history["action"]
+                               response[sensor_id] = state_value
+
                 # Set our state:
                 response["area{:0>2}_state".format(area["bank"] + 1)] = area[
                     "status"
                 ]
 
+            # Process output data (if present)
             output_index = 1
             for output in details["outputs"]:
                 if self._output_delta.get(output["name"]) != output["state"]:
