@@ -45,7 +45,7 @@ async def async_setup_entry(
         """Dynamically create/delete sensors based on what was detected by the hub."""
 
         _LOGGER.debug(
-            "Entering _auto_manage_sensors with history, %d area(s), %d zone(s) and %d output(s)",
+            "Entering _auto_manage_sensors with %d history item(s), %d area(s), %d zone(s) and %d output(s)",
             len(history_data),
             len(areas),
             len(zones),
