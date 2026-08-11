@@ -119,7 +119,7 @@ class UltraSyncAlarmControlPanel(
         if status == "armed stay":
             return AlarmControlPanelState.ARMED_HOME
 
-        if status == "ready":
+        if status in ("ready", "not ready"):
             return AlarmControlPanelState.DISARMED
 
         if "exit delay" in status or "arming" in status:
