@@ -35,7 +35,7 @@ async def async_setup_entry(
     # At least one sensor must be pre-created or Home Assistant will not
     # call any updates
     hass.data[DOMAIN][entry.entry_id][SENSORS]["area01_state"] = UltraSyncSensor(
-        coordinator, entry.entry_id, "area01_state", "Area1State"
+        coordinator, entry.entry_id, entry.data[CONF_NAME], "area01_state", "Area1State"
     )
 
     async_add_entities([hass.data[DOMAIN][entry.entry_id][SENSORS]["area01_state"]])
@@ -70,6 +70,7 @@ async def async_setup_entry(
                 sensors[sensor_id] = UltraSyncSensor(
                     coordinator,
                     entry.entry_id,
+                    entry.data[CONF_NAME],
                     sensor_id,
                     # Friendly Name
                     "Area{}State".format(bank_no + 1),
@@ -94,6 +95,7 @@ async def async_setup_entry(
                 sensors[sensor_id] = UltraSyncSensor(
                     coordinator,
                     entry.entry_id,
+                    entry.data[CONF_NAME],
                     sensor_id,
                     # Friendly Name
                     "Zone{}State".format(bank_no + 1),
@@ -119,6 +121,7 @@ async def async_setup_entry(
                 sensors[sensor_id] = UltraSyncSensor(
                     coordinator,
                     entry.entry_id,
+                    entry.data[CONF_NAME],
                     sensor_id,
                     # Friendly Name
                     "Output{}State".format(output_index),
@@ -145,6 +148,7 @@ async def async_setup_entry(
                 sensors[sensor_id] = UltraSyncSensor(
                     coordinator,
                     entry.entry_id,
+                    entry.data[CONF_NAME],
                     sensor_id,
                     # Friendly Name
                     "History {} State".format(history_name),
@@ -177,12 +181,13 @@ async def async_setup_entry(
 
 
 class UltraSyncSensor(UltraSyncEntity):
-    """Representation of an UltraSync sensor."""
+    """Representation of a UltraSync sensor."""
 
     def __init__(
         self,
         coordinator: UltraSyncDataUpdateCoordinator,
         entry_id: str,
+        entry_name: str,
         sensor_type: str,
         sensor_name: str,
     ):
@@ -197,7 +202,8 @@ class UltraSyncSensor(UltraSyncEntity):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            name=sensor_name,
+            entry_name=entry_name,
+            name=f"{entry_name} {sensor_name}",
         )
 
     def __setitem__(self, key, value):

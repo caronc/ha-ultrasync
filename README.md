@@ -70,6 +70,16 @@ The state of Output sensors will ALWAYS remain `0` whether it has been turned on
 
 The state of History sensors will be updated whenever the Area sensor changes, so generally will be either one of `Turn off` or `Turn on`.
 
+### Alarm Control Panel
+
+Each area on your panel also gets an alarm control panel entity, named `{ultrasync_integration}_{area name}` (for example `alarm_control_panel.ultrasync_area_1`). It works with Home Assistant's built-in alarm panel card, so no custom card or template is needed.
+
+- **Arm Home** sets the area to Stay, **Arm Away** sets it to Away, and **Disarm** disarms it. Only that area is changed.
+- The state follows the panel itself: `disarmed`, `armed_home`, `armed_away`, `arming` (exit delay), `pending` (entry delay) or `triggered` (fire, burglar, panic or medical alarm).
+- No code is asked for; the PIN from the integration setup is used.
+
+All of the sensors, events and services above keep working as before.
+
 ### Event Automation
 
 When an Zone or Sensor changes it's state an event usable for automation is triggered on the Home Assistant Bus.

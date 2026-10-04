@@ -1,6 +1,6 @@
 """Defines the base UltraSync entity."""
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -14,6 +14,7 @@ class UltraSyncEntity(CoordinatorEntity):
         *,
         coordinator,
         entry_id: str,
+        entry_name: str,
         name: str,
     ) -> None:
         """Initialize the UltraSync entity."""
@@ -23,8 +24,10 @@ class UltraSyncEntity(CoordinatorEntity):
         self._entry_id = entry_id
         self._attr_name = name
 
+        # Group every entity of this integration under one device, named after
+        # what the user called the integration when setting it up
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
-            name="UltraSync",
-            manufacturer="Interlogix",
+            name=entry_name,
+            manufacturer="UltraSync",
         )
