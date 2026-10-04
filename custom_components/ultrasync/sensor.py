@@ -9,7 +9,7 @@ from homeassistant.core import callback, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import UltraSyncEntity
+from .entity import UltraSyncEntity
 from .const import (
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
@@ -45,7 +45,7 @@ async def async_setup_entry(
         """Dynamically create/delete sensors based on what was detected by the hub."""
 
         _LOGGER.debug(
-            "Entering _auto_manage_sensors with history, %d area(s), %d zone(s) and %d output(s)",
+            "Entering _auto_manage_sensors with %d history item(s), %d area(s), %d zone(s) and %d output(s)",
             len(history_data),
             len(areas),
             len(zones),
@@ -202,6 +202,7 @@ class UltraSyncSensor(UltraSyncEntity):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
+            entry_name=entry_name,
             name=f"{entry_name} {sensor_name}",
         )
 

@@ -1,8 +1,16 @@
 """Provides the UltraSync DataUpdateCoordinator."""
 from datetime import timedelta
 import logging
+import threading
 
-from async_timeout import timeout
+try:
+    # Python 3.11+ has this built in; newer Home Assistant no longer ships
+    # the async_timeout package
+    from asyncio import timeout
+
+except ImportError:
+    from async_timeout import timeout
+
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -27,6 +35,13 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._init = False
 
+        # Polls and alarm panel commands run in different worker threads, but
+        # share one panel session; this lock makes them take turns
+        self.hub_lock = threading.Lock()
+
+        # The areas from the last successful poll (used by the alarm panels)
+        self.areas = []
+
         # Used to track delta (for change tracking)
         self._area_delta = {}
         self._zone_delta = {}
@@ -50,10 +65,13 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
         # The hub can sometimes take a very long time to respond; wait
         async with timeout(10):
-            details = await self.hass.async_add_executor_job(lambda: self.hub.details(max_age_sec=0))
+            details = await self.hass.async_add_executor_job(self._details)
 
         # Update our details
         if details:
+            # Keep the latest areas for the alarm panels
+            self.areas = details["areas"]
+
             async_dispatcher_send(
                 self.hass,
                 SENSOR_UPDATE_LISTENER,
@@ -166,3 +184,8 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Return our response
         return response
+
+    def _details(self) -> dict:
+        """Read the panel details, waiting for any alarm command to finish."""
+        with self.hub_lock:
+            return self.hub.details(max_age_sec=0)

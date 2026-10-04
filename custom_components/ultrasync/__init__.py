@@ -6,7 +6,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from ultrasync import AlarmScene
 import voluptuous as vol
 
@@ -28,7 +27,7 @@ from .const import (
 )
 from .coordinator import UltraSyncDataUpdateCoordinator
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "alarm_control_panel"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -151,20 +150,3 @@ def _async_register_services(
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-class UltraSyncEntity(CoordinatorEntity):
-    """Defines a base UltraSync entity."""
-
-    def __init__(
-        self, *, entry_id: str, name: str, coordinator: UltraSyncDataUpdateCoordinator
-    ) -> None:
-        """Initialize the UltraSync entity."""
-        super().__init__(coordinator)
-        self._name = name
-        self._entry_id = entry_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
