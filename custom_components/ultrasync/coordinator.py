@@ -49,6 +49,8 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
         self._output_delta = {}
         self._history_delta = {}
         self._last_history_key = None
+        self._last_disarmed_by = None
+        self._last_armed_by = None
 
         update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 
@@ -106,7 +108,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
             # Only announce new history records. Do not replay the latest
             # historical event on Home Assistant startup.
             for history in details["history_data"]:
-                history_name = history["area_name"]
+                history_name = history.get("area_name") or "System"
                 sensor_id = "history_name{}state".format(history_name)
                 state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
                 response[sensor_id] = state_value
@@ -124,7 +126,17 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                             "details": history.get("details", []),
                         },
                     )
+                if key != self._last_history_key:
+                    action = history["action"].casefold()
+                    user = history.get("user")
+                    if user and action == "turn off":
+                        self._last_disarmed_by = user
+                    elif user and action == "turn on":
+                        self._last_armed_by = user
                 self._last_history_key = key
+
+            response["last_disarmed_by"] = self._last_disarmed_by
+            response["last_armed_by"] = self._last_armed_by
 
             # Process area data
             for area in details["areas"]:
