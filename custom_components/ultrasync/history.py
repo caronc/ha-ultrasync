@@ -108,3 +108,36 @@ def collect_new_history(hub, previous_record=None, limit=MAX_CATCHUP_EVENTS):
         records.append(previous)
         current = previous
     return list(reversed(records))
+
+
+def bootstrap_history(hub, limit=MAX_CATCHUP_EVENTS):
+    """Find last known arm/disarm users without replaying historical events.
+
+    Returns (latest_record, users) where users maps actions to their latest
+    matching history entry. Search newest to oldest and stop once both found.
+    """
+    newest = fetch_history(hub, LATEST_EVENT)
+    if newest is None:
+        return None
+    users = {}
+    seen = set()
+    current = newest
+    for _ in range(limit):
+        record = current.get("record")
+        if not record or record in seen:
+            break
+        seen.add(record)
+        action = current.get("action", "").casefold()
+        if action in ("turn on", "turn off") and current.get("user"):
+            users.setdefault(action, current)
+        if len(users) == 2 or record == current.get("oldest_record"):
+            break
+        try:
+            previous_index = (int(record) - 1) % 65534
+        except (ValueError, TypeError):
+            break
+        previous = fetch_history(hub, previous_index)
+        if previous is None:
+            break
+        current = previous
+    return newest, users
