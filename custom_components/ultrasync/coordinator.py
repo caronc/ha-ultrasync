@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import ultrasync
 
 from .const import DOMAIN, SENSOR_UPDATE_LISTENER
+from .history import bootstrap_history, collect_new_history
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,10 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
         self._zone_delta = {}
         self._output_delta = {}
         self._history_delta = {}
+        self._last_history_key = None
+        self._last_history_record = None
+        self._last_disarmed_by = None
+        self._last_armed_by = None
 
         update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 
@@ -78,7 +83,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                 details["areas"],
                 details["zones"],
                 details["outputs"],
-                details["history_data"]
+                details["history_data"][-1:]
             )
 
             # Process zone data
@@ -101,23 +106,39 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     "status"
                 ]
 
-            # Process history data (if present)
+            # Only announce new history records. Do not replay the latest
+            # historical event on Home Assistant startup.
             for history in details["history_data"]:
-                history_name = history["area_name"]
+                history_name = history.get("area_name") or "System"
                 sensor_id = "history_name{}state".format(history_name)
                 state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
                 response[sensor_id] = state_value
 
-                # Fire event to get initial state
-                self.hass.bus.fire(
-                    "ultrasync_history_update",
-                    {
-                        "name": history_name,
-                        "status": history["action"],
-                        "timestamp": history["timestamp"],
-                        "user": history["user"],
-                    },
-                )
+                key = (history.get("record"), history.get("raw"))
+                if self._last_history_key is not None and key != self._last_history_key:
+                    self.hass.bus.fire(
+                        "ultrasync_history_update",
+                        {
+                            "name": history_name,
+                            "status": history["action"],
+                            "timestamp": history["timestamp"],
+                            "user": history["user"],
+                            "record": history.get("record"),
+                            "details": history.get("details", []),
+                        },
+                    )
+                if key != self._last_history_key:
+                    action = history["action"].casefold()
+                    user = history.get("user")
+                    if user and action == "turn off":
+                        self._last_disarmed_by = user
+                    elif user and action == "turn on":
+                        self._last_armed_by = user
+                self._last_history_key = key
+                self._last_history_record = history.get("record") or self._last_history_record
+
+            response["last_disarmed_by"] = self._last_disarmed_by
+            response["last_armed_by"] = self._last_armed_by
 
             # Process area data
             for area in details["areas"]:
@@ -134,25 +155,6 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
                     # Update our sequence
                     self._area_delta[area["bank"]] = area["sequence"]
-
-                    # Update our history when area state changes (if history data is present)
-                    if "history" in details and details["history_data"]:
-                        for history in details["history_data"]:
-                            history_name = history["area_name"]
-                            sensor_id = "history_name{}state".format(history_name)
-                            state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
-                            if history_name == area["name"]:
-                               self.hass.bus.fire(
-                                   "ultrasync_history_update",
-                                   {
-                                        "name": history_name,
-                                        "status": history["action"],
-                                        "timestamp": history["timestamp"],
-                                        "user": history["user"],
-                                   },
-                               )
-                               self._history_delta[history["area_name"]] = history["action"]
-                               response[sensor_id] = state_value
 
                 # Set our state:
                 response["area{:0>2}_state".format(area["bank"] + 1)] = area[
@@ -188,4 +190,29 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
     def _details(self) -> dict:
         """Read the panel details, waiting for any alarm command to finish."""
         with self.hub_lock:
-            return self.hub.details(max_age_sec=0)
+            details = self.hub.details(max_age_sec=0)
+            if not details:
+                return details
+            # The library's legacy history.htm parser cannot see all ComNav
+            # XML events. Only use XML when this panel exposes ComNav history.
+            if str(self.hub.vendor).lower().find("comnav") >= 0:
+                if self._last_history_record is None:
+                    initial = bootstrap_history(self.hub)
+                    if initial is not None:
+                        latest, users = initial
+                        self._last_history_record = latest["record"]
+                        self._last_history_key = (
+                            latest.get("record"), latest.get("raw")
+                        )
+                        if "turn on" in users:
+                            self._last_armed_by = users["turn on"]["user"]
+                        if "turn off" in users:
+                            self._last_disarmed_by = users["turn off"]["user"]
+                        details["history_data"] = [latest]
+                    else:
+                        details["history_data"] = []
+                    return details
+                history = collect_new_history(self.hub, self._last_history_record)
+                if history is not None:
+                    details["history_data"] = history
+            return details

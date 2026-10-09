@@ -316,3 +316,48 @@ mode: single
 ## Donations
 
 This software is 100% open source, however [buying me a coffee](https://paypal.me/lead2gold?locale.x=en_US) shows your appreciation and greatly inspires me to continue improving the application. :)
+
+
+## ComNav keypad history (NX-595E)
+
+On supported Hills ComNav panels, the integration reads authenticated
+`/user/history.xml` records to identify the user reported by the panel when
+an area is armed or disarmed. The integration exposes two additional sensors:
+
+- **Last Armed By**: last named user from a `Turn On` history record.
+- **Last Disarmed By**: last named user from a `Turn Off` history record.
+
+These sensors are populated from the most recent matching history records at
+startup, even when the latest record is unrelated to arming. The initial scan
+does **not** emit old history events. A bounded history scan (currently up to
+32 records) catches changes between subsequent polls; if the panel has more
+events than the scan limit, some may not be recovered. Values may remain
+unknown when the matching record is not available.
+
+New records fire a Home Assistant event named `ultrasync_history_update` with
+the following keys: `name` (area or System), `status` (such as `Turn On`
+or `Turn Off`), `user`, `timestamp`, `record`, and `details`. The
+panel's history timestamp is a string as reported by the device and may not
+include a year.
+
+Other panel history records, including communicator failures, remain available
+as events. **Filter on `status` and `user` in automations** if you only
+want arm/disarm notifications. For example:
+
+```yaml
+triggers:
+  - trigger: event
+    event_type: ultrasync_history_update
+    event_data:
+      status: "Turn Off"
+conditions:
+  - condition: template
+    value_template: "{{ trigger.event.data.user | default('') | trim != '' }}"
+actions:
+  - action: persistent_notification.create
+    data:
+      message: "Alarm disarmed by {{ trigger.event.data.user }}"
+```
+
+This is an example notification only; no SMS provider is required. ComNav
+history support does not change history behaviour for other UltraSync vendors.
