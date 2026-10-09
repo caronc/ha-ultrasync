@@ -12,6 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType
 import ultrasync
 import voluptuous as vol
 
@@ -32,7 +33,7 @@ def validate_input(hass: HomeAssistant, data: dict) -> Dict[str, Any]:
         host=data[CONF_HOST], user=data[CONF_USERNAME], pin=data[CONF_PIN]
     )
 
-    # validate by attempting to authenticate with our hub
+    # validate by attempting to authenticate with the host
 
     if not usync.login():
         # report our connection issue
@@ -45,7 +46,6 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """UltraSync config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -63,6 +63,32 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            # ---- PIN validation ----
+            pin = user_input.get(CONF_PIN, "")
+            if not isinstance(pin, str):
+                pin = str(pin)
+            if not pin.isdigit():
+                errors["pin"] = "invalid_pin"
+            elif not (4 <= len(pin) <= 8):
+                errors["pin"] = "invalid_pin_length"
+
+            if errors:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)): str,
+                            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
+                            vol.Required(CONF_PIN, default=user_input.get(CONF_PIN, "")): TextSelector(
+                                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                            ),
+                        }
+                    ),
+                    errors=errors,
+                )
+            # ------------------------
+
             try:
                 await self.hass.async_add_executor_job(
                     validate_input, self.hass, user_input
@@ -87,7 +113,9 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PIN): str,
+                    vol.Required(CONF_PIN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
                 }
             ),
             errors=errors,
@@ -99,20 +127,61 @@ class UltraSyncOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input: Optional[ConfigType] = None):
         """Manage UltraSync options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
 
-        options = {
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): int,
+        current_data = {
+            **self._config_entry.data,
+            **self._config_entry.options,
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        if user_input is not None:
+            # ---- PIN validation ----
+            errors = {}
+            pin = user_input.get(CONF_PIN, "")
+            if pin:
+                if not isinstance(pin, str):
+                    pin = str(pin)
+                if not pin.isdigit():
+                    errors["pin"] = "invalid_pin"
+                elif not (4 <= len(pin) <= 8):
+                    errors["pin"] = "invalid_pin_length"
+
+            if errors:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, current_data.get(CONF_HOST, ""))): str,
+                            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, current_data.get(CONF_USERNAME, ""))): str,
+                            vol.Required(CONF_PIN, default=user_input.get(CONF_PIN, current_data.get(CONF_PIN, ""))): TextSelector(
+                                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                            ),
+                            vol.Optional(
+                                CONF_SCAN_INTERVAL,
+                                default=user_input.get(CONF_SCAN_INTERVAL, current_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)),
+                            ): int,
+                        }
+                    ),
+                    errors=errors,
+                )
+            # ------------------------
+
+            return self.async_create_entry(title="", data=user_input)
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=current_data.get(CONF_HOST, "")): str,
+                vol.Required(CONF_USERNAME, default=current_data.get(CONF_USERNAME, "")): str,
+                vol.Required(CONF_PIN, default=current_data.get(CONF_PIN, "")): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=current_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                ): int,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

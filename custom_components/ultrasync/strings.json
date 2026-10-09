@@ -3,7 +3,8 @@
     "flow_title": "Interlogix UltraSync Hub: {name}",
     "step": {
       "user": {
-        "title": "Connect to Interlogix UltraSync Hub",
+        "title": "Connect to UltraSync System",
+        "description": "Enter the connection details for your system. You should use the IP address or FQDN of the system on your network as the host value.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
@@ -13,7 +14,9 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_pin": "PIN must be numeric.",
+      "invalid_pin_length": "PIN must be 4–8 digits."
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
@@ -23,7 +26,12 @@
   "options": {
     "step": {
       "init": {
+        "title": "UltraSync Options",
+        "description": "Update your UltraSync settings.",
         "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "pin": "[%key:common::config_flow::data::pin%]",
           "scan_interval": "Update frequency (seconds)"
         }
       }
