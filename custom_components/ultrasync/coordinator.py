@@ -83,7 +83,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                 details["areas"],
                 details["zones"],
                 details["outputs"],
-                details["history_data"]
+                details["history_data"][-1:]
             )
 
             # Process zone data
@@ -115,7 +115,9 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                 response[sensor_id] = state_value
 
                 key = (history.get("record"), history.get("raw"))
-                if self._last_history_key is not None and key != self._last_history_key:
+                if (self._last_history_key is not None and key != self._last_history_key
+                        and not (history["action"].casefold() == "communication failed"
+                                 and "Device 191" in history.get("details", []))):
                     self.hass.bus.fire(
                         "ultrasync_history_update",
                         {
