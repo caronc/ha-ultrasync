@@ -20,13 +20,13 @@ def test_navigation_commands():
 
 def test_disarm_user():
     event = parse_history_response(b"""<response><evrsp>Turn Off
-Aussie Fencing
-HomeAssistant
+Example Office
+Automation User
 Time: 05:46
 Date: 9 Oct</evrsp><cur>173</cur><old>175</old><last>174</last></response>""")
     assert event["action"] == "Turn Off"
-    assert event["area_name"] == "Aussie Fencing"
-    assert event["user"] == "HomeAssistant"
+    assert event["area_name"] == "Example Office"
+    assert event["user"] == "Automation User"
     assert event["record"] == "173"
 
 
@@ -43,13 +43,13 @@ Date: 9 Oct</evrsp><cur>174</cur><old>175</old><last>174</last></response>""")
 
 def test_physical_keypad_disarm():
     event = parse_history_response(b"""<response><evrsp>Turn Off
-Aussie Fencing
-Cleaners
+Example Office
+Keypad User
 Time: 08:48
 Date: 3 Oct</evrsp><cur>120</cur><old>175</old><last>174</last></response>""")
     assert event["action"] == "Turn Off"
-    assert event["area_name"] == "Aussie Fencing"
-    assert event["user"] == "Cleaners"
+    assert event["area_name"] == "Example Office"
+    assert event["user"] == "Keypad User"
     assert event["record"] == "120"
 
 
@@ -57,13 +57,13 @@ def test_catchup_skips_intermediate_communication_fault(monkeypatch):
 
     events = {
         history.LATEST_EVENT: {"record": "174", "oldest_record": "175", "action": "Communication Failed"},
-        173: {"record": "173", "oldest_record": "175", "action": "Turn Off", "user": "Cleaners"},
-        172: {"record": "172", "oldest_record": "175", "action": "Turn On", "user": "HomeAssistant"},
+        173: {"record": "173", "oldest_record": "175", "action": "Turn Off", "user": "Keypad User"},
+        172: {"record": "172", "oldest_record": "175", "action": "Turn On", "user": "Automation User"},
     }
     monkeypatch.setattr(history, "fetch_history", lambda hub, event: events.get(event))
     result = history.collect_new_history(None, previous_record="172")
     assert [item["record"] for item in result] == ["173", "174"]
-    assert result[0]["user"] == "Cleaners"
+    assert result[0]["user"] == "Keypad User"
 
 
 def test_first_poll_does_not_replay_backlog(monkeypatch):
@@ -82,14 +82,14 @@ def test_bootstrap_finds_last_known_users_without_confusing_device_events(monkey
         history.LATEST_EVENT: {"record": "174", "oldest_record": "175",
                                "action": "Communication Failed", "user": ""},
         173: {"record": "173", "oldest_record": "175",
-              "action": "Turn Off", "user": "Cleaners"},
+              "action": "Turn Off", "user": "Keypad User"},
         172: {"record": "172", "oldest_record": "175",
               "action": "Communication Failed", "user": ""},
         171: {"record": "171", "oldest_record": "175",
-              "action": "Turn On", "user": "Rick"},
+              "action": "Turn On", "user": "Another User"},
     }
     monkeypatch.setattr(history, "fetch_history", lambda hub, event: events.get(event))
     latest, users = history.bootstrap_history(None)
     assert latest["record"] == "174"
-    assert users["turn off"]["user"] == "Cleaners"
-    assert users["turn on"]["user"] == "Rick"
+    assert users["turn off"]["user"] == "Keypad User"
+    assert users["turn on"]["user"] == "Another User"
