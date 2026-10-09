@@ -33,3 +33,15 @@ Date: 9 Oct</evrsp><cur>174</cur><old>175</old><last>174</last></response>""")
     assert event["user"] == ""
     assert event["details"] == ["Device 191"]
     assert event["latest_record"] == "174"
+
+
+def test_physical_keypad_disarm():
+    event = parse_history_response(b"""<response><evrsp>Turn Off
+Aussie Fencing
+Cleaners
+Time: 08:48
+Date: 3 Oct</evrsp><cur>120</cur><old>175</old><last>174</last></response>""")
+    assert event["action"] == "Turn Off"
+    assert event["area_name"] == "Aussie Fencing"
+    assert event["user"] == "Cleaners"
+    assert event["record"] == "120"
