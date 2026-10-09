@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import ultrasync
 
 from .const import DOMAIN, SENSOR_UPDATE_LISTENER
-from .history import collect_new_history
+from .history import bootstrap_history, collect_new_history
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -198,6 +198,22 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
             # The library's legacy history.htm parser cannot see all ComNav
             # XML events. Only use XML when this panel exposes ComNav history.
             if str(self.hub.vendor).lower().find("comnav") >= 0:
+                if self._last_history_record is None:
+                    initial = bootstrap_history(self.hub)
+                    if initial is not None:
+                        latest, users = initial
+                        self._last_history_record = latest["record"]
+                        self._last_history_key = (
+                            latest.get("record"), latest.get("raw")
+                        )
+                        if "turn on" in users:
+                            self._last_armed_by = users["turn on"]["user"]
+                        if "turn off" in users:
+                            self._last_disarmed_by = users["turn off"]["user"]
+                        details["history_data"] = [latest]
+                    else:
+                        details["history_data"] = []
+                    return details
                 history = collect_new_history(self.hub, self._last_history_record)
                 if history is not None:
                     details["history_data"] = history
