@@ -76,3 +76,21 @@ def test_first_poll_does_not_replay_backlog(monkeypatch):
     monkeypatch.setattr(history, "fetch_history", fake_fetch)
     assert len(history.collect_new_history(None)) == 1
     assert calls == [history.LATEST_EVENT]
+
+
+def test_bootstrap_finds_last_known_users_without_confusing_device_events(monkeypatch):
+    events = {
+        history.LATEST_EVENT: {"record": "174", "oldest_record": "175",
+                               "action": "Communication Failed", "user": ""},
+        173: {"record": "173", "oldest_record": "175",
+              "action": "Turn Off", "user": "Cleaners"},
+        172: {"record": "172", "oldest_record": "175",
+              "action": "Communication Failed", "user": ""},
+        171: {"record": "171", "oldest_record": "175",
+              "action": "Turn On", "user": "Rick"},
+    }
+    monkeypatch.setattr(history, "fetch_history", lambda hub, event: events.get(event))
+    latest, users = history.bootstrap_history(None)
+    assert latest["record"] == "174"
+    assert users["turn off"]["user"] == "Cleaners"
+    assert users["turn on"]["user"] == "Rick"
