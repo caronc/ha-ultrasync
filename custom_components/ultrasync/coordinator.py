@@ -115,9 +115,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                 response[sensor_id] = state_value
 
                 key = (history.get("record"), history.get("raw"))
-                if (self._last_history_key is not None and key != self._last_history_key
-                        and not (history["action"].casefold() == "communication failed"
-                                 and "Device 191" in history.get("details", []))):
+                if self._last_history_key is not None and key != self._last_history_key:
                     self.hass.bus.fire(
                         "ultrasync_history_update",
                         {
