@@ -1,10 +1,16 @@
 """Regression tests for the Home Assistant ComNav history parser."""
 
-from custom_components.ultrasync.history import (
-    LATEST_EVENT,
-    OLDEST_EVENT,
-    parse_history_response,
+import importlib.util
+from pathlib import Path
+
+spec = importlib.util.spec_from_file_location(
+    "comnav_history", Path(__file__).resolve().parents[1] / "custom_components" / "ultrasync" / "history.py"
 )
+history = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(history)
+LATEST_EVENT = history.LATEST_EVENT
+OLDEST_EVENT = history.OLDEST_EVENT
+parse_history_response = history.parse_history_response
 
 
 def test_navigation_commands():
@@ -48,7 +54,6 @@ Date: 3 Oct</evrsp><cur>120</cur><old>175</old><last>174</last></response>""")
 
 
 def test_catchup_skips_intermediate_communication_fault(monkeypatch):
-    from custom_components.ultrasync import history
 
     events = {
         history.LATEST_EVENT: {"record": "174", "oldest_record": "175", "action": "Communication Failed"},
