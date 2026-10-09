@@ -45,3 +45,29 @@ Date: 3 Oct</evrsp><cur>120</cur><old>175</old><last>174</last></response>""")
     assert event["area_name"] == "Aussie Fencing"
     assert event["user"] == "Cleaners"
     assert event["record"] == "120"
+
+
+def test_catchup_skips_intermediate_communication_fault(monkeypatch):
+    from custom_components.ultrasync import history
+
+    events = {
+        history.LATEST_EVENT: {"record": "174", "oldest_record": "175", "action": "Communication Failed"},
+        173: {"record": "173", "oldest_record": "175", "action": "Turn Off", "user": "Cleaners"},
+        172: {"record": "172", "oldest_record": "175", "action": "Turn On", "user": "HomeAssistant"},
+    }
+    monkeypatch.setattr(history, "fetch_history", lambda hub, event: events.get(event))
+    result = history.collect_new_history(None, previous_record="172")
+    assert [item["record"] for item in result] == ["173", "174"]
+    assert result[0]["user"] == "Cleaners"
+
+
+def test_first_poll_does_not_replay_backlog(monkeypatch):
+    from custom_components.ultrasync import history
+
+    calls = []
+    def fake_fetch(hub, event):
+        calls.append(event)
+        return {"record": "174", "oldest_record": "175"}
+    monkeypatch.setattr(history, "fetch_history", fake_fetch)
+    assert len(history.collect_new_history(None)) == 1
+    assert calls == [history.LATEST_EVENT]
