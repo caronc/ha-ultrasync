@@ -1,7 +1,11 @@
-"""ComNav history XML parsing utilities."""
+"""ComNav history XML parsing and authenticated retrieval."""
 
+import logging
 import xml.etree.ElementTree as ET
 
+import requests
+
+_LOGGER = logging.getLogger(__name__)
 LATEST_EVENT = 65535
 OLDEST_EVENT = 65534
 
@@ -17,7 +21,6 @@ def parse_history_response(content):
     ]
     if not lines:
         return None
-
     action = lines[0]
     details = [
         line for line in lines[1:]
@@ -38,3 +41,33 @@ def parse_history_response(content):
         "latest_record": root.findtext("last") or "",
         "raw": raw.strip(),
     }
+
+
+def fetch_history(hub, event=LATEST_EVENT):
+    """Use the UltraSync library's session to read a ComNav history record.
+
+    Called under the coordinator's hub_lock. Login is delegated to the library.
+    """
+    if not hub.session_id and not hub.login():
+        return None
+    url = hub.url.rstrip("/") + "/user/history.xml"
+    for attempt in range(2):
+        try:
+            response = hub.session.post(
+                url,
+                data={"sess": hub.session_id, "event": event},
+                auth=hub.auth,
+                verify=hub.verify,
+                timeout=hub.timeout,
+                allow_redirects=False,
+            )
+            if response.status_code in (301, 302, 303, 307, 308, 401, 403):
+                if attempt == 0 and hub.login():
+                    continue
+                return None
+            response.raise_for_status()
+            return parse_history_response(response.content)
+        except (requests.RequestException, ET.ParseError, ValueError) as exc:
+            _LOGGER.debug("ComNav history retrieval failed: %s", type(exc).__name__)
+            return None
+    return None
