@@ -67,7 +67,6 @@ def test_catchup_skips_intermediate_communication_fault(monkeypatch):
 
 
 def test_first_poll_does_not_replay_backlog(monkeypatch):
-    from custom_components.ultrasync import history
 
     calls = []
     def fake_fetch(hub, event):
