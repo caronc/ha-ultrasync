@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import ultrasync
 
 from .const import DOMAIN, SENSOR_UPDATE_LISTENER
+from .history import fetch_history
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
         self._zone_delta = {}
         self._output_delta = {}
         self._history_delta = {}
+        self._last_history_key = None
 
         update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 
@@ -101,23 +103,28 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     "status"
                 ]
 
-            # Process history data (if present)
+            # Only announce new history records. Do not replay the latest
+            # historical event on Home Assistant startup.
             for history in details["history_data"]:
                 history_name = history["area_name"]
                 sensor_id = "history_name{}state".format(history_name)
                 state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
                 response[sensor_id] = state_value
 
-                # Fire event to get initial state
-                self.hass.bus.fire(
-                    "ultrasync_history_update",
-                    {
-                        "name": history_name,
-                        "status": history["action"],
-                        "timestamp": history["timestamp"],
-                        "user": history["user"],
-                    },
-                )
+                key = (history.get("record"), history.get("raw"))
+                if self._last_history_key is not None and key != self._last_history_key:
+                    self.hass.bus.fire(
+                        "ultrasync_history_update",
+                        {
+                            "name": history_name,
+                            "status": history["action"],
+                            "timestamp": history["timestamp"],
+                            "user": history["user"],
+                            "record": history.get("record"),
+                            "details": history.get("details", []),
+                        },
+                    )
+                self._last_history_key = key
 
             # Process area data
             for area in details["areas"]:
@@ -134,25 +141,6 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
                     # Update our sequence
                     self._area_delta[area["bank"]] = area["sequence"]
-
-                    # Update our history when area state changes (if history data is present)
-                    if "history" in details and details["history_data"]:
-                        for history in details["history_data"]:
-                            history_name = history["area_name"]
-                            sensor_id = "history_name{}state".format(history_name)
-                            state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
-                            if history_name == area["name"]:
-                               self.hass.bus.fire(
-                                   "ultrasync_history_update",
-                                   {
-                                        "name": history_name,
-                                        "status": history["action"],
-                                        "timestamp": history["timestamp"],
-                                        "user": history["user"],
-                                   },
-                               )
-                               self._history_delta[history["area_name"]] = history["action"]
-                               response[sensor_id] = state_value
 
                 # Set our state:
                 response["area{:0>2}_state".format(area["bank"] + 1)] = area[
@@ -188,4 +176,13 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
     def _details(self) -> dict:
         """Read the panel details, waiting for any alarm command to finish."""
         with self.hub_lock:
-            return self.hub.details(max_age_sec=0)
+            details = self.hub.details(max_age_sec=0)
+            if not details:
+                return details
+            # The library's legacy history.htm parser cannot see all ComNav
+            # XML events. Only use XML when this panel exposes ComNav history.
+            if details.get("history_data"):
+                latest = fetch_history(self.hub)
+                if latest:
+                    details["history_data"] = [latest]
+            return details
