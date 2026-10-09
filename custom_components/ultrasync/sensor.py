@@ -38,7 +38,14 @@ async def async_setup_entry(
         coordinator, entry.entry_id, entry.data[CONF_NAME], "area01_state", "Area1State"
     )
 
-    async_add_entities([hass.data[DOMAIN][entry.entry_id][SENSORS]["area01_state"]])
+    for sensor_type, friendly in (
+        ("last_disarmed_by", "Last Disarmed By"),
+        ("last_armed_by", "Last Armed By"),
+    ):
+        hass.data[DOMAIN][entry.entry_id][SENSORS][sensor_type] = UltraSyncSensor(
+            coordinator, entry.entry_id, entry.data[CONF_NAME], sensor_type, friendly
+        )
+    async_add_entities(list(hass.data[DOMAIN][entry.entry_id][SENSORS].values()))
 
     @callback
     def _auto_manage_sensors(areas: dict, zones: dict, outputs: dict, history_data: dict) -> None:
@@ -59,7 +66,7 @@ async def async_setup_entry(
         sensors = hass.data[DOMAIN][entry.entry_id][SENSORS]
 
         # Track our detected sensors (for automatic updates if required)
-        detected_sensors = set()
+        detected_sensors = {"last_disarmed_by", "last_armed_by"}
 
         for meta in areas:
             bank_no = meta["bank"]
@@ -140,7 +147,7 @@ async def async_setup_entry(
             output_index += 1
 
         for meta in history_data:
-            history_name = meta["area_name"]
+            history_name = meta.get("area_name") or "System"
             sensor_id = "history_name{}state".format(history_name)
             detected_sensors.add(sensor_id)
             if sensor_id not in sensors:
