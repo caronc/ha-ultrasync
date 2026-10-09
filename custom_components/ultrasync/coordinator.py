@@ -197,7 +197,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                 return details
             # The library's legacy history.htm parser cannot see all ComNav
             # XML events. Only use XML when this panel exposes ComNav history.
-            if details.get("history_data"):
+            if str(self.hub.vendor).lower().find("comnav") >= 0:
                 history = collect_new_history(self.hub, self._last_history_record)
                 if history is not None:
                     details["history_data"] = history
