@@ -71,3 +71,40 @@ def fetch_history(hub, event=LATEST_EVENT):
             _LOGGER.debug("ComNav history retrieval failed: %s", type(exc).__name__)
             return None
     return None
+
+
+MAX_CATCHUP_EVENTS = 32
+
+
+def collect_new_history(hub, previous_record=None, limit=MAX_CATCHUP_EVENTS):
+    """Fetch recent events newest-first, stopping at the last seen record.
+
+    On first poll, return the latest event as a baseline, not a backlog.
+    History indexes are circular; never assume latest is numerically largest.
+    """
+    newest = fetch_history(hub, LATEST_EVENT)
+    if newest is None:
+        return None
+    if previous_record is None or newest["record"] == previous_record:
+        return [newest]
+
+    records = [newest]
+    visited = {newest["record"]}
+    oldest = newest["oldest_record"]
+    current = newest
+    while len(records) < limit:
+        if current["record"] == oldest:
+            break
+        try:
+            previous_index = (int(current["record"]) - 1) % 65534
+        except (ValueError, TypeError):
+            break
+        previous = fetch_history(hub, previous_index)
+        if previous is None or previous["record"] in visited:
+            break
+        if previous["record"] == previous_record:
+            break
+        visited.add(previous["record"])
+        records.append(previous)
+        current = previous
+    return list(reversed(records))
