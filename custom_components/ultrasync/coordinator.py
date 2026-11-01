@@ -14,7 +14,7 @@ except ImportError:
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import ultrasync
 
 from .const import DOMAIN, SENSOR_UPDATE_LISTENER
@@ -66,6 +66,11 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
         # The hub can sometimes take a very long time to respond; wait
         async with timeout(10):
             details = await self.hass.async_add_executor_job(self._details)
+
+        # The library returns an empty mapping when a poll or login fails.
+        # Keep the previous snapshot and let the coordinator mark it unavailable.
+        if not details:
+            raise UpdateFailed("UltraSync did not return a panel snapshot")
 
         # Update our details
         if details:
