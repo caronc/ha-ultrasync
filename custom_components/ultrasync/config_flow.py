@@ -3,6 +3,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -11,6 +12,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback, HomeAssistant
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.typing import ConfigType
 import ultrasync
 import voluptuous as vol
@@ -19,6 +25,18 @@ from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
+
+# The PIN field hides what is typed, like a password box.
+PIN_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+
+# Details needed to log in to the panel. Used when changing them later.
+RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PIN): PIN_SELECTOR,
+    }
+)
 
 
 class AuthFailureException(IOError):
@@ -45,7 +63,6 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """UltraSync config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -87,8 +104,54 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PIN): str,
+                    vol.Required(CONF_PIN): PIN_SELECTOR,
                 }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Change the host, username or PIN of an existing setup."""
+        entry = self._get_reconfigure_entry()
+        errors = {}
+
+        if user_input is not None:
+            # Only save the new details once they can log in to the panel.
+            try:
+                await self.hass.async_add_executor_job(
+                    validate_input, self.hass, user_input
+                )
+
+            except AuthFailureException:
+                # The panel refused the details or could not be reached.
+                errors["base"] = "cannot_connect"
+
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+
+            else:
+                # A running integration reloads itself when its details
+                # change. One that failed to start (for example because
+                # the panel moved to a new address) is started again here.
+                # The state is read first, because saving starts the reload
+                # straight away and changes it.
+                was_loaded = entry.state is ConfigEntryState.LOADED
+                changed = self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, **user_input}
+                )
+                if changed and not was_loaded:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
+                return self.async_abort(reason="reconfigure_successful")
+
+        # Fill the form with what is saved today (or what was just typed).
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, user_input or entry.data
             ),
             errors=errors,
         )
@@ -99,7 +162,9 @@ class UltraSyncOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize options flow."""
-        self.config_entry = config_entry
+        # Newer Home Assistant sets self.config_entry itself and does not
+        # allow it to be assigned, so keep our own reference.
+        self._entry = config_entry
 
     async def async_step_init(self, user_input: Optional[ConfigType] = None):
         """Manage UltraSync options."""
@@ -109,7 +174,7 @@ class UltraSyncOptionsFlowHandler(config_entries.OptionsFlow):
         options = {
             vol.Optional(
                 CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
+                default=self._entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 ),
             ): int,

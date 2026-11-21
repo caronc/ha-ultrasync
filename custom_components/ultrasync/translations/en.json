@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "single_instance_allowed": "Already configured. Only a single configuration possible.",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "reconfigure_successful": "Re-configuration was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect"
@@ -16,7 +17,17 @@
                     "pin": "PIN Code",
                     "username": "Username"
                 },
-                "title": "Connect to Informix UltraSync Hub"
+                "title": "Connect to UltraSync System",
+                "description": "Enter the details you use to log in to your alarm panel's web page. Host is the panel's IP address or host name on your network."
+            },
+            "reconfigure": {
+                "title": "Update UltraSync Connection",
+                "description": "Update the details used to log in to your alarm panel. They are checked against the panel before they are saved.",
+                "data": {
+                    "host": "Host",
+                    "username": "Username",
+                    "pin": "PIN Code"
+                }
             }
         }
     },
