@@ -14,7 +14,7 @@ except ImportError:
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import ultrasync
 
 from .const import DOMAIN, SENSOR_UPDATE_LISTENER
@@ -67,118 +67,124 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
         async with timeout(10):
             details = await self.hass.async_add_executor_job(self._details)
 
+        # An empty reply means the panel could not be read (it is offline,
+        # or the login was refused). Report a failed update so Home
+        # Assistant shows the entities as unavailable, keeps the last
+        # good data and tries again on the next poll.
+        if not details:
+            raise UpdateFailed("Unable to read the UltraSync panel")
+
         # Update our details
-        if details:
-            # Keep the latest areas for the alarm panels
-            self.areas = details["areas"]
+        # Keep the latest areas for the alarm panels
+        self.areas = details["areas"]
 
-            async_dispatcher_send(
-                self.hass,
-                SENSOR_UPDATE_LISTENER,
-                details["areas"],
-                details["zones"],
-                details["outputs"],
-                details["history_data"]
-            )
+        async_dispatcher_send(
+            self.hass,
+            SENSOR_UPDATE_LISTENER,
+            details["areas"],
+            details["zones"],
+            details["outputs"],
+            details["history_data"]
+        )
 
-            # Process zone data
-            for zone in details["zones"]:
-                if self._zone_delta.get(zone["bank"]) != zone["sequence"]:
-                    self.hass.bus.fire(
-                        "ultrasync_zone_update",
-                        {
-                            "sensor": zone["bank"] + 1,
-                            "name": zone["name"],
-                            "status": zone["status"],
-                        },
-                    )
-
-                    # Update our sequence
-                    self._zone_delta[zone["bank"]] = zone["sequence"]
-
-                # Set our state:
-                response["zone{:0>2}_state".format(zone["bank"] + 1)] = zone[
-                    "status"
-                ]
-
-            # Process history data (if present)
-            for history in details["history_data"]:
-                history_name = history["area_name"]
-                sensor_id = "history_name{}state".format(history_name)
-                state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
-                response[sensor_id] = state_value
-
-                # Fire event to get initial state
+        # Process zone data
+        for zone in details["zones"]:
+            if self._zone_delta.get(zone["bank"]) != zone["sequence"]:
                 self.hass.bus.fire(
-                    "ultrasync_history_update",
+                    "ultrasync_zone_update",
                     {
-                        "name": history_name,
-                        "status": history["action"],
-                        "timestamp": history["timestamp"],
-                        "user": history["user"],
+                        "sensor": zone["bank"] + 1,
+                        "name": zone["name"],
+                        "status": zone["status"],
                     },
                 )
 
-            # Process area data
-            for area in details["areas"]:
-                area_changed = self._area_delta.get(area["bank"]) != area["sequence"]
-                if area_changed:
-                    self.hass.bus.fire(
-                        "ultrasync_area_update",
-                        {
-                            "area": area["bank"] + 1,
-                            "name": area["name"],
-                            "status": area["status"],
-                        },
-                    )
+                # Update our sequence
+                self._zone_delta[zone["bank"]] = zone["sequence"]
 
-                    # Update our sequence
-                    self._area_delta[area["bank"]] = area["sequence"]
+            # Set our state:
+            response["zone{:0>2}_state".format(zone["bank"] + 1)] = zone[
+                "status"
+            ]
 
-                    # Update our history when area state changes (if history data is present)
-                    if "history" in details and details["history_data"]:
-                        for history in details["history_data"]:
-                            history_name = history["area_name"]
-                            sensor_id = "history_name{}state".format(history_name)
-                            state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
-                            if history_name == area["name"]:
-                               self.hass.bus.fire(
-                                   "ultrasync_history_update",
-                                   {
-                                        "name": history_name,
-                                        "status": history["action"],
-                                        "timestamp": history["timestamp"],
-                                        "user": history["user"],
-                                   },
-                               )
-                               self._history_delta[history["area_name"]] = history["action"]
-                               response[sensor_id] = state_value
+        # Process history data (if present)
+        for history in details["history_data"]:
+            history_name = history["area_name"]
+            sensor_id = "history_name{}state".format(history_name)
+            state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
+            response[sensor_id] = state_value
 
-                # Set our state:
-                response["area{:0>2}_state".format(area["bank"] + 1)] = area[
-                    "status"
-                ]
+            # Fire event to get initial state
+            self.hass.bus.fire(
+                "ultrasync_history_update",
+                {
+                    "name": history_name,
+                    "status": history["action"],
+                    "timestamp": history["timestamp"],
+                    "user": history["user"],
+                },
+            )
 
-            # Process output data (if present)
-            output_index = 1
-            for output in details["outputs"]:
-                if self._output_delta.get(output["name"]) != output["state"]:
-                    self.hass.bus.fire(
-                        "ultrasync_output_update",
-                        {
-                            "name": output["name"],
-                            "status": output["state"],
-                        },
-                    )
+        # Process area data
+        for area in details["areas"]:
+            area_changed = self._area_delta.get(area["bank"]) != area["sequence"]
+            if area_changed:
+                self.hass.bus.fire(
+                    "ultrasync_area_update",
+                    {
+                        "area": area["bank"] + 1,
+                        "name": area["name"],
+                        "status": area["status"],
+                    },
+                )
 
-                    # Update our sequence
-                    self._output_delta[output["name"]] = output["state"]
+                # Update our sequence
+                self._area_delta[area["bank"]] = area["sequence"]
 
-                # Set our state:
-                response["output{}state".format(output_index)] = output[
-                    "state"
-                ]
-                output_index += 1
+                # Update our history when area state changes (if history data is present)
+                if "history" in details and details["history_data"]:
+                    for history in details["history_data"]:
+                        history_name = history["area_name"]
+                        sensor_id = "history_name{}state".format(history_name)
+                        state_value = "{} by {} at {}".format(history["action"], history["user"], history["timestamp"])
+                        if history_name == area["name"]:
+                           self.hass.bus.fire(
+                               "ultrasync_history_update",
+                               {
+                                    "name": history_name,
+                                    "status": history["action"],
+                                    "timestamp": history["timestamp"],
+                                    "user": history["user"],
+                               },
+                           )
+                           self._history_delta[history["area_name"]] = history["action"]
+                           response[sensor_id] = state_value
+
+            # Set our state:
+            response["area{:0>2}_state".format(area["bank"] + 1)] = area[
+                "status"
+            ]
+
+        # Process output data (if present)
+        output_index = 1
+        for output in details["outputs"]:
+            if self._output_delta.get(output["name"]) != output["state"]:
+                self.hass.bus.fire(
+                    "ultrasync_output_update",
+                    {
+                        "name": output["name"],
+                        "status": output["state"],
+                    },
+                )
+
+                # Update our sequence
+                self._output_delta[output["name"]] = output["state"]
+
+            # Set our state:
+            response["output{}state".format(output_index)] = output[
+                "state"
+            ]
+            output_index += 1
 
         self._init = True
 
