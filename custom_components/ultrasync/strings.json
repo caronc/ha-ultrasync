@@ -3,9 +3,19 @@
     "flow_title": "Interlogix UltraSync Hub: {name}",
     "step": {
       "user": {
-        "title": "Connect to Interlogix UltraSync Hub",
+        "title": "Connect to UltraSync System",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "description": "Enter the details you use to log in to your alarm panel's web page. Host is the panel's IP address or host name on your network."
+      },
+      "reconfigure": {
+        "title": "Update UltraSync Connection",
+        "description": "Update the details used to log in to your alarm panel. They are checked against the panel before they are saved.",
+        "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "pin": "[%key:common::config_flow::data::pin%]"
@@ -17,7 +27,8 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {

@@ -39,6 +39,14 @@ Go to the integrations page in your configuration and click on new **Integration
 
 **Note**: You can only be logged into the ZeroWire/UltraSync hub with the same user once; a subsequent login with the same user logs out the other. Since Home Assistant (HA) actively polls and maintains a login session to this Hub, it can prevent you from being able to log into at the same time elsewhere (via it's website). It is strongly recommended that you create a second user account on your Hub dedicated for just HA.
 
+### Changing the Connection
+
+If your panel moves to a new address, or you change the user or PIN it logs in with, open the UltraSync integration, click the three dots and choose **Reconfigure**. Type in the new details, including the PIN. They are tested against your panel before they are saved.
+
+### Options
+
+Click **Configure** on the UltraSync integration to change the **Update frequency (seconds)**: how often Home Assistant reads your panel. The default is 1 second; it can be set from 1 up to 86400 (one day).
+
 ### Sensor
 
 Sensors are dynamically generated on the fly.
