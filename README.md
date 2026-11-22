@@ -70,6 +70,8 @@ Output and history sensors also work the same way and only load what is detected
 - `ultrasync_outputXstate`: The Output X State
 - `ultrasync_historyXstate`: The History State
 
+**Note:** Output and history sensors are only available on ComNav panels. They won't appear for xGen, xGen8, ZeroWire or Reliance XR panels. On xGen panels (including the Reliance XR) the local web page has no outputs page, so relays and scenes can't be controlled from Home Assistant.
+
 The attributes read from the hub are associated with each Detected Zone, Area, History (by area) and Output; so you can rename them to something more appropriate if you feel the need.
 
 There are several states each Zone and Area sensor can be at, but usually they will be one of the following: `Unknown`, `Ready`, `Not Ready`, `Armed Stay`, and `Armed Away`.  The `Unknown` state is assigned to sensors that are not reporting; they usually sit in the spots of the Areas you're not monitoring.
@@ -124,7 +126,7 @@ Available services:
 - `panic`: Triggers the Alarm (Panic Alarm)
 - `disarm`: Disarm the alarm
 - `bypass`: Bypasses a specified Zone
-- `switch`: Activates an Output Control entity
+- `switch`: Activates an Output Control entity (ComNav panels only)
 
 As an example you may want to `arm` your alarm in `stay` mode each night and disarm it in the morning like so:
 
