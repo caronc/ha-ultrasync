@@ -70,6 +70,8 @@ Output and history sensors also work the same way and only load what is detected
 - `ultrasync_outputXstate`: The Output X State
 - `ultrasync_historyXstate`: The History State
 
+**Note:** Output and history sensors are only available on ComNav panels. They won't appear for xGen, xGen8, ZeroWire or Reliance XR panels. On xGen panels (including the Reliance XR) the local web page has no outputs page, so relays and scenes can't be controlled from Home Assistant.
+
 The attributes read from the hub are associated with each Detected Zone, Area, History (by area) and Output; so you can rename them to something more appropriate if you feel the need.
 
 There are several states each Zone and Area sensor can be at, but usually they will be one of the following: `Unknown`, `Ready`, `Not Ready`, `Armed Stay`, and `Armed Away`.  The `Unknown` state is assigned to sensors that are not reporting; they usually sit in the spots of the Areas you're not monitoring.
@@ -113,18 +115,43 @@ Example automation to send a message via [Apprise](https://www.home-assistant.io
       message: "{{trigger.event.data.name}} has new status {{trigger.event.data.status}}"
 ```
 
+### Fire, Medical and Panic Alarms
+
+When someone presses the Fire, Medical (Auxiliary) or Panic (Police) keys on a keypad, the panel raises that alarm on the area. Home Assistant sees it straight away:
+
+- The area sensor changes to `Fire Alarm`, `Medical Alarm` or `Panic Alarm`.
+- An `ultrasync_area_update` event is fired with that same `status`.
+- The area's alarm control panel changes to `triggered`.
+
+Example automation that sends a message for any of these three alarms:
+
+```yaml
+- alias: Keypad Emergency
+  trigger:
+    platform: event
+    event_type: ultrasync_area_update
+  condition:
+    condition: template
+    value_template: "{{ trigger.event.data.status in ['Fire Alarm', 'Medical Alarm', 'Panic Alarm'] }}"
+  action:
+    service: notify.apprise
+    data:
+      title: "Emergency!"
+      message: "{{ trigger.event.data.status }} in {{ trigger.event.data.name }}"
+```
+
 ### Services
 
 Available services:
 
 - `stay`: Set alarm scene to Stay Mode
 - `away`: Set alarm scene to Away Mode (fully activate Alarm)
-- `medical`: Triggers the Alarm (Medical Alarm)
-- `fire`: Triggers the Alarm (Fire Alarm)
-- `panic`: Triggers the Alarm (Panic Alarm)
+- `medical`: Triggers the Alarm (Medical Alarm, ComNav panels only)
+- `fire`: Triggers the Alarm (Fire Alarm, ComNav panels only)
+- `panic`: Triggers the Alarm (Panic Alarm, ComNav panels only)
 - `disarm`: Disarm the alarm
 - `bypass`: Bypasses a specified Zone
-- `switch`: Activates an Output Control entity
+- `switch`: Activates an Output Control entity (ComNav panels only)
 
 As an example you may want to `arm` your alarm in `stay` mode each night and disarm it in the morning like so:
 
