@@ -51,10 +51,15 @@ def validate_input(hass: HomeAssistant, data: dict) -> Dict[str, Any]:
     )
 
     # validate by attempting to authenticate with our hub
+    try:
+        if not usync.login():
+            # report our connection issue
+            raise AuthFailureException()
 
-    if not usync.login():
-        # report our connection issue
-        raise AuthFailureException()
+    finally:
+        # Log the test session off again, so it does not stay open on the
+        # panel next to the one the integration uses.
+        usync.logout()
 
     return True
 
@@ -133,25 +138,39 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
 
             else:
+                # The entry is named after the host when it is first set up.
+                # Follow a new host, unless the user renamed the entry.
+                title = (
+                    user_input[CONF_HOST]
+                    if entry.title == entry.data[CONF_HOST]
+                    else entry.title
+                )
+
                 # A running integration reloads itself when its details
                 # change. One that failed to start (for example because
-                # the panel moved to a new address) is started again here.
-                # The state is read first, because saving starts the reload
-                # straight away and changes it.
+                # the panel was offline) is started again here, even if
+                # the details stayed the same. The state is read first,
+                # because saving starts the reload straight away.
                 was_loaded = entry.state is ConfigEntryState.LOADED
-                changed = self.hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, **user_input}
+                self.hass.config_entries.async_update_entry(
+                    entry, title=title, data={**entry.data, **user_input}
                 )
-                if changed and not was_loaded:
+                if not was_loaded:
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
                 return self.async_abort(reason="reconfigure_successful")
 
         # Fill the form with what is saved today (or what was just typed).
+        # The PIN is left blank, so it is never sent back to the browser.
+        suggested = {
+            key: value
+            for key, value in (user_input or entry.data).items()
+            if key != CONF_PIN
+        }
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                RECONFIGURE_SCHEMA, user_input or entry.data
+                RECONFIGURE_SCHEMA, suggested
             ),
             errors=errors,
         )
@@ -177,7 +196,9 @@ class UltraSyncOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self._entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 ),
-            ): int,
+                # From one second up to one day. Zero or less would poll
+                # non-stop, and very large numbers stop the setup loading.
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=86400)),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

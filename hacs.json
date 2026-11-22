@@ -3,5 +3,5 @@
     "hacs": "0.24.0",
     "domains": ["sensor"],
     "render_readme": true,
-    "homeassistant": "0.110.0"
+    "homeassistant": "2024.11.0"
 }

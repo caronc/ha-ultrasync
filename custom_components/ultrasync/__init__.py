@@ -58,15 +58,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    undo_listener = entry.add_update_listener(_async_update_listener)
-
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
-        DATA_UNDO_UPDATE_LISTENER: [undo_listener],
+        DATA_UNDO_UPDATE_LISTENER: [],
         SENSORS: {},
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Listen for setting changes only once setup has worked. A setup that
+    # fails part way is never unloaded, so a listener added earlier would
+    # stay behind (one more each retry) and reload the entry several times.
+    hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER].append(
+        entry.add_update_listener(_async_update_listener)
+    )
 
     _async_register_services(hass, coordinator)
 
