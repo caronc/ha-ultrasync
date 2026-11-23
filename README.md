@@ -7,7 +7,7 @@
 
 ![ZeroWire Hub Image](https://raw.githubusercontent.com/caronc/ultrasync/master/static/zerowire_hub.jpeg)
 
-Interlogix ZeroWire and Hills ComNav (NX-595E) UltraSync Security Panel for Integration for Home Assistant Community Store (HACS)
+Home Assistant integration (installable through HACS) for Interlogix ZeroWire, Interlogix xGen/xGen8 and Hills ComNav (NX-595E) alarm panels that use UltraSync
 
 This is based on a [a Pull Request I created here](https://github.com/home-assistant/core/pull/42549) to implement [my version of a UltraSync security panel](https://github.com/caronc/ultrasync) into Home Assistant (HA).
 

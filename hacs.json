@@ -1,7 +1,6 @@
 {
     "name": "UltraSync",
     "hacs": "0.24.0",
-    "domains": ["sensor"],
     "render_readme": true,
     "homeassistant": "2024.11.0"
 }
