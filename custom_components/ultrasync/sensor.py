@@ -35,7 +35,12 @@ async def async_setup_entry(
     # At least one sensor must be pre-created or Home Assistant will not
     # call any updates
     hass.data[DOMAIN][entry.entry_id][SENSORS]["area01_state"] = UltraSyncSensor(
-        coordinator, entry.entry_id, entry.data[CONF_NAME], "area01_state", "Area1State"
+        coordinator,
+        entry.entry_id,
+        entry.data[CONF_NAME],
+        "area01_state",
+        "Area1State",
+        name_suffix=" State",
     )
 
     async_add_entities([hass.data[DOMAIN][entry.entry_id][SENSORS]["area01_state"]])
@@ -74,6 +79,7 @@ async def async_setup_entry(
                     sensor_id,
                     # Friendly Name
                     "Area{}State".format(bank_no + 1),
+                    name_suffix=" State",
                 )
 
                 # Add our new area sensor
@@ -190,10 +196,17 @@ class UltraSyncSensor(UltraSyncEntity):
         entry_name: str,
         sensor_type: str,
         sensor_name: str,
+        name_suffix: str = "",
     ):
         """Initialize a new UltraSync sensor."""
 
         self._sensor_type = sensor_type
+
+        # Shown when the panel has no name for this item, and appended to the
+        # panel's name when it does
+        self._entry_name = entry_name
+        self._fallback_name = sensor_name
+        self._name_suffix = name_suffix
         self._unique_id = f"{entry_id}_{sensor_type}"
 
         # Initialize our Attributes
@@ -209,6 +222,17 @@ class UltraSyncSensor(UltraSyncEntity):
     def __setitem__(self, key, value):
         """Set our sensor attributes."""
         self.__attributes[key] = value
+
+    @property
+    def name(self) -> str:
+        """Return the panel's name for this item, or a generic one."""
+        # The panel's own name is read from the latest poll, so renaming
+        # a zone or area on the panel shows up here
+        panel_name = self.__attributes.get("name")
+        if isinstance(panel_name, str) and panel_name.strip():
+            return f"{self._entry_name} {panel_name.strip()}{self._name_suffix}"
+
+        return f"{self._entry_name} {self._fallback_name}"
 
     @property
     def unique_id(self) -> str:
