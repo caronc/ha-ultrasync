@@ -5,8 +5,9 @@ import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from ultrasync import AlarmScene
+from ultrasync.common import NX595EVendor
 import voluptuous as vol
 
 from .const import (
@@ -111,17 +112,28 @@ def _async_register_services(
         """Service call to set alarm system to 'stay' mode in UltraSync Hub."""
         coordinator.hub.set_alarm(state=AlarmScene.STAY)
         
+    def comnav_only(state: str) -> None:
+        """Send a fire, medical or panic alarm, which only ComNav panels accept."""
+        # Other panels have no command for these alarms, so show an error
+        # instead of sending nothing without a word
+        if coordinator.hub.vendor != NX595EVendor.COMNAV:
+            raise HomeAssistantError(
+                f"The {state} alarm can only be sent to ComNav panels"
+            )
+
+        coordinator.hub.set_alarm(state=state)
+
     def fire(call) -> None:
         """Service call to set alarm system to 'fire' mode in UltraSync Hub."""
-        coordinator.hub.set_alarm(state=AlarmScene.FIRE)
+        comnav_only(AlarmScene.FIRE)
 
     def medical(call) -> None:
         """Service call to set alarm system to 'medical' mode in UltraSync Hub."""
-        coordinator.hub.set_alarm(state=AlarmScene.MEDICAL)
+        comnav_only(AlarmScene.MEDICAL)
 
     def panic(call) -> None:
         """Service call to set alarm system to 'panic' mode in UltraSync Hub."""
-        coordinator.hub.set_alarm(state=AlarmScene.PANIC)
+        comnav_only(AlarmScene.PANIC)
 
     def disarm(call) -> None:
         """Service call to disable alarm in UltraSync Hub."""

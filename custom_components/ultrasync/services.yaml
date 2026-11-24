@@ -10,13 +10,13 @@ disarm:
   description: Set Alarm to Disarmed
 
 fire:
-  description: Set Alarm to Fire Alarm
+  description: Set Alarm to Fire Alarm (ComNav panels only)
 
 medical:
-  description: Set Alarm to Medical Alarm
+  description: Set Alarm to Medical Alarm (ComNav panels only)
 
 panic:
-  description: Set Alarm to Panic Alarm
+  description: Set Alarm to Panic Alarm (ComNav panels only)
 
 bypass:
   description: Bypass a zone
